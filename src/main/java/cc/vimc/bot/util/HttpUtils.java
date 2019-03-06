@@ -109,7 +109,7 @@ public class HttpUtils {
 
     public static String httpPost(String url, Map<String, String> parameters, Map<String, String> header)
     {
-        logger.error(String.format("post请求发出的时间%s", String.valueOf(new Date())));
+        logger.info(String.format("post请求发出的时间%s", String.valueOf(new Date())));
 
         String result = "";// 返回的结果
         BufferedReader in = null;// 读取响应输入流
@@ -134,7 +134,7 @@ public class HttpUtils {
                 String temp_params = sb.toString();
                 params = temp_params.substring(0, temp_params.length() - 1);
             }
-            logger.error(url+"?"+params);
+            logger.info(url+"?"+params);
             // 创建URL对象
             java.net.URL connURL = new java.net.URL(url);
             // 打开URL连接
@@ -170,7 +170,7 @@ public class HttpUtils {
                 result += line;
             }
 
-            logger.error(String.format("post请求结束的时间%s", String.valueOf(new Date())));
+            logger.info(String.format("post请求结束的时间%s", String.valueOf(new Date())));
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

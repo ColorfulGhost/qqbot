@@ -17,12 +17,7 @@ public class GroupEventImpl {
     @Autowired
     private MinecraftMapper minecraftMapper;
 
-    public List<String> onlinePlayerList(BotGroupDTO botGroupDTO){
-
-
+    public List<String> onlinePlayerList(){
                 return minecraftMapper.onlinePlayerList();
-
-
-
     }
 }

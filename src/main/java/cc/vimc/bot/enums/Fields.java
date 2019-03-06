@@ -33,6 +33,9 @@ public class Fields {
      * 消息类型，支持 private、group、discuss，分别对应私聊、群组、讨论组，如不传入，则根据传入的 *_id 参数判断
      */
     public static final String MESSAGE_TYPE = "message_type";
+    public static final String PRIVATE = "private";
+    public static final String GROUP = "group";
+    public static final String DISCUSS = "discuss";
     /**
      * 赞的次数，每个好友每天最多 10 次
      */
