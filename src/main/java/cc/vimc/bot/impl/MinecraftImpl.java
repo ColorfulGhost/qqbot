@@ -1,16 +1,14 @@
 package cc.vimc.bot.impl;
 
-import cc.vimc.bot.rtti.EditField;
-import cc.vimc.bot.util.HttpUtils;
-import com.github.t9t.minecraftrconclient.RconClient;
 
+import cc.vimc.bot.rcon.RconClient;
+import cc.vimc.bot.util.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -46,12 +44,10 @@ public class MinecraftImpl {
     public String sendCommand(String command) throws NoSuchFieldException, IllegalAccessException {
         HashMap<String, String> request = new HashMap<>();
         request.put(GROUP_ID, MC_GROUP_QQ);
-
-         EditField.editField(StandardCharsets.UTF_8,"PAYLOAD_CHARSET",RconClient.class);
-         EditField.editField(StandardCharsets.UTF_8,"US_ASCII",StandardCharsets.class);
         try (RconClient client = RconClient.open(MCSERVERHOST, MCRCONPORT, RCONPASSWORD)) {
-            String backMessage = client.sendCommand(String.format(command, StandardCharsets.US_ASCII));
-            return new String(backMessage.getBytes(StandardCharsets.US_ASCII), StandardCharsets.UTF_8);
+            String backMessage = client.sendCommand(command);
+            backMessage = backMessage.replaceAll("§.*?[0-z]","");
+            return backMessage;
         } catch (Exception e) {
             var message = "链接服务器RCON失败，请联系欧尼酱。";
             request.put(MESSAGE, message);

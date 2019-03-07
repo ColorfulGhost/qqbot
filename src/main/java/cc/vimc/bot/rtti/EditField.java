@@ -1,11 +1,8 @@
 package cc.vimc.bot.rtti;
 
-import com.github.t9t.minecraftrconclient.RconClient;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 public class EditField {
 
