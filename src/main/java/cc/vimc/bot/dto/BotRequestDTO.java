@@ -1,18 +1,17 @@
 package cc.vimc.bot.dto;
-
-public class BotPrivateDTO {
+public class BotRequestDTO {
 
     /**
-     * font : 55054360
-     * message : 晚安
-     * message_id : 91
+     * font : 8014448
+     * message : .
+     * message_id : 1386
      * message_type : private
      * post_type : message
-     * raw_message : 晚安
+     * raw_message : .
      * self_id : 1277841527
      * sender : {"age":0,"nickname":"Ghost","sex":"unknown","user_id":815666528}
      * sub_type : friend
-     * time : 1551543797
+     * time : 1552021149
      * user_id : 815666528
      */
 
@@ -22,11 +21,39 @@ public class BotPrivateDTO {
     private String message_type;
     private String post_type;
     private String raw_message;
-    private int self_id;
-    private SenderBean sender;
+    private String self_id;
     private String sub_type;
     private int time;
-    private int user_id;
+    private String user_id;
+    private  Sender sender;
+    private Object anonymous;
+    private String group_id;
+
+
+    public Object getAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(Object anonymous) {
+        this.anonymous = anonymous;
+    }
+
+    public String getGroup_id() {
+        return group_id;
+    }
+
+    public void setGroup_id(String group_id) {
+        this.group_id = group_id;
+    }
+
+
+    public Sender getSender() {
+        return sender;
+    }
+
+    public void setSender(Sender sender) {
+        this.sender = sender;
+    }
 
     public int getFont() {
         return font;
@@ -76,21 +103,14 @@ public class BotPrivateDTO {
         this.raw_message = raw_message;
     }
 
-    public int getSelf_id() {
+    public String getSelf_id() {
         return self_id;
     }
 
-    public void setSelf_id(int self_id) {
+    public void setSelf_id(String self_id) {
         this.self_id = self_id;
     }
 
-    public SenderBean getSender() {
-        return sender;
-    }
-
-    public void setSender(SenderBean sender) {
-        this.sender = sender;
-    }
 
     public String getSub_type() {
         return sub_type;
@@ -108,57 +128,13 @@ public class BotPrivateDTO {
         this.time = time;
     }
 
-    public int getUser_id() {
+    public String getUser_id() {
         return user_id;
     }
 
-    public void setUser_id(int user_id) {
+    public void setUser_id(String user_id) {
         this.user_id = user_id;
     }
 
-    public static class SenderBean {
-        /**
-         * age : 0
-         * nickname : Ghost
-         * sex : unknown
-         * user_id : 815666528
-         */
 
-        private int age;
-        private String nickname;
-        private String sex;
-        private int user_id;
-
-        public int getAge() {
-            return age;
-        }
-
-        public void setAge(int age) {
-            this.age = age;
-        }
-
-        public String getNickname() {
-            return nickname;
-        }
-
-        public void setNickname(String nickname) {
-            this.nickname = nickname;
-        }
-
-        public String getSex() {
-            return sex;
-        }
-
-        public void setSex(String sex) {
-            this.sex = sex;
-        }
-
-        public int getUser_id() {
-            return user_id;
-        }
-
-        public void setUser_id(int user_id) {
-            this.user_id = user_id;
-        }
-    }
 }

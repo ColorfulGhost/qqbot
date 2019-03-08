@@ -15,8 +15,7 @@ public class MinecraftController {
     MinecraftImpl minecraft;
     @RequestMapping("console")
     @ResponseBody
-    public void console(String command) throws NoSuchFieldException, IllegalAccessException {
+    public void console(String command) {
         minecraft.sendCommand(command);
-
     }
 }

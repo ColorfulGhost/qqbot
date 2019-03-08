@@ -1,12 +1,10 @@
 package cc.vimc.bot.controller;
 
-import cc.vimc.bot.dto.BotGroupDTO;
-import cc.vimc.bot.dto.BotPrivateDTO;
+import cc.vimc.bot.dto.BotRequestDTO;
+import cc.vimc.bot.dto.Sender;
 import cc.vimc.bot.impl.BotApiImpl;
-import cc.vimc.bot.impl.GroupEventImpl;
 import cc.vimc.bot.impl.MinecraftImpl;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static cc.vimc.bot.enums.Commands.LIST;
+import static cc.vimc.bot.enums.Commands.TPS;
 import static cc.vimc.bot.enums.Fields.*;
 
 
@@ -26,16 +26,10 @@ public class EventController {
     private static final Logger logger = LoggerFactory.getLogger(EventController.class);
 
     @Autowired
-    GroupEventImpl groupEvent;
-
-    @Autowired
     BotApiImpl botApi;
 
     @Autowired
     MinecraftImpl minecraft;
-
-    @Value("${List_PLAYER}")
-    String List_PLAYER;
 
     @Value("${SLEEP}")
     String SLEEP;
@@ -45,34 +39,36 @@ public class EventController {
 
     @RequestMapping("/")
     @ResponseBody
-    public void pushMsg(@RequestHeader(name = "X-Self-ID", required = true) String botQQ, @RequestBody String request) throws NoSuchFieldException, IllegalAccessException {
-
-        JSONObject jsonObject = JSON.parseObject(request);
-        String messageType = jsonObject.getString("message_type");
-        String message = jsonObject.getString("message");
-        String userId = jsonObject.getString("user_id");
-
-
-        if (messageType.equals(GROUP)) {
-            var botGroupDTO = JSON.parseObject(request, BotGroupDTO.class);
-            if (!StringUtils.isEmpty(botGroupDTO.getMessage())) {
-                if (botGroupDTO.getMessage().equals(List_PLAYER)) {
-                    List<String> playerList = groupEvent.onlinePlayerList();
-                    botApi.postPlayerList(playerList, botGroupDTO.getSender().getNickname());
-                    logger.info("{}", playerList);
-                }
-            }
-        } else if (messageType.equals(PRIVATE)) {
-            var botPrivateDTO = JSON.parseObject(request, BotPrivateDTO.class);
-            if (!StringUtils.isEmpty(botPrivateDTO.getMessage())) {
-                if (SLEEP.equals(botPrivateDTO.getMessage())) {
-
-                }
-            }
-
+    public void pushMsg(@RequestHeader(name = "X-Self-ID", required = true) String botQQ, @RequestBody String request) {
+        BotRequestDTO botRequestDTO = new BotRequestDTO();
+        Sender sender = new Sender();
+        try {
+            botRequestDTO = JSON.parseObject(request, BotRequestDTO.class);
+            sender = JSON.parseObject(request).getObject("sender", Sender.class);
+        } catch (Exception e) {
+            logger.error("模型转换出错！：{}", e);
         }
-        if (MASTER_QQ.equals(userId) && message.startsWith("//")) {
-            botApi.sendMsg(jsonObject.getString(messageType+"_id"),messageType,minecraft.sendCommand(message.substring(2)));
+        if (botRequestDTO == null || sender == null) {
+            return;
+        }
+        String messageType = botRequestDTO.getMessage_type();
+        String message = botRequestDTO.getMessage();
+
+        if (!StringUtils.isEmpty(message)) {
+            if (messageType.equals(GROUP)) {
+                switch (message){
+                    case LIST:
+                        List<String> playerList = minecraft.onlinePlayerList();
+                        minecraft.postPlayerList(playerList, sender.getNickname());
+                        logger.info("{}", playerList);
+                        break;
+                    case TPS:
+                        botApi.sendMsg(botRequestDTO, minecraft.sendCommand("tps"));
+                }
+            }
+            if (MASTER_QQ.equals(sender.getUser_id()) && message.startsWith("//")) {
+                botApi.sendMsg(botRequestDTO, minecraft.sendCommand(message.substring(2)));
+            }
         }
     }
 
