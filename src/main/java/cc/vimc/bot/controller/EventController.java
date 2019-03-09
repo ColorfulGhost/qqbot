@@ -37,6 +37,9 @@ public class EventController {
     @Value("${MASTER_QQ}")
     String MASTER_QQ;
 
+    @Value("${MC_GROUP_QQ}")
+    String MC_GROUP_QQ;
+
     @RequestMapping("/")
     @ResponseBody
     public void pushMsg(@RequestHeader(name = "X-Self-ID", required = true) String botQQ, @RequestBody String request) {
@@ -44,7 +47,7 @@ public class EventController {
         Sender sender = new Sender();
         try {
             botRequestDTO = JSON.parseObject(request, BotRequestDTO.class);
-            sender = JSON.parseObject(request).getObject("sender", Sender.class);
+            sender = botRequestDTO.getSender();
         } catch (Exception e) {
             logger.error("模型转换出错！：{}", e);
         }
@@ -55,20 +58,34 @@ public class EventController {
         String message = botRequestDTO.getMessage();
 
         if (!StringUtils.isEmpty(message)) {
-            if (messageType.equals(GROUP)) {
-                switch (message){
-                    case LIST:
-                        List<String> playerList = minecraft.onlinePlayerList();
-                        minecraft.postPlayerList(playerList, sender.getNickname());
-                        logger.info("{}", playerList);
-                        break;
-                    case TPS:
-                        botApi.sendMsg(botRequestDTO, minecraft.sendCommand("tps"));
-                }
+            switch (messageType) {
+                //处理组消息
+                case GROUP:
+                    //处理MCQQ群里的消息
+                    if (MC_GROUP_QQ.equals(botRequestDTO.getGroup_id())) {
+                        //命令
+                        switch (message) {
+                            case LIST:
+                                minecraft.postPlayerList(sender.getNickname());
+                                break;
+                            case TPS:
+                                botApi.sendMsg(botRequestDTO, minecraft.sendCommand("tps"));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    //处理私有消息
+                case PRIVATE:
+                    // 这里处理主人QQ消息
+                    if (MASTER_QQ.equals(sender.getUser_id())) {
+                        if (message.startsWith("//")) {
+                            botApi.sendMsg(botRequestDTO, minecraft.sendCommand(message.substring(2)));
+                        }
+                    }
             }
-            if (MASTER_QQ.equals(sender.getUser_id()) && message.startsWith("//")) {
-                botApi.sendMsg(botRequestDTO, minecraft.sendCommand(message.substring(2)));
-            }
+
+
         }
     }
 

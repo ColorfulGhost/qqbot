@@ -51,9 +51,9 @@ public class MinecraftImpl {
         return minecraftMapper.onlinePlayerList();
     }
 
-    public void postPlayerList(List<String> players, String sendNickName) {
-
-        int playerSize = players.size();
+    public void postPlayerList(String sendNickName) {
+        var players = this.onlinePlayerList();
+        var playerSize = players.size();
         var request = new HashMap();
         request.put(GROUP_ID, MC_GROUP_QQ);
 
@@ -74,16 +74,12 @@ public class MinecraftImpl {
     }
 
     public String sendCommand(String command) {
-        HashMap<String, String> request = new HashMap<>();
-        request.put(GROUP_ID, MC_GROUP_QQ);
         try (RconClient client = RconClient.open(MCSERVERHOST, MCRCONPORT, RCONPASSWORD)) {
-            return client.sendCommand(command).replaceAll("§.*?[0-z]", "");
+            var message = client.sendCommand(command).replaceAll("§.*?[0-z]", "");
+            return message.substring(0,message.length()-1);
         } catch (Exception e) {
-            var message = "链接服务器RCON失败，请联系欧尼酱。";
-            request.put(MESSAGE, message);
-            HttpUtils.httpPost(QQBOT_URL + SEND_MSG, request, Collections.emptyMap());
             logger.error("服务器RCON协议出现错误：{}", e);
-            return null;
+            return "链接服务器RCON失败，请联系欧尼酱。";
         }
     }
 }
