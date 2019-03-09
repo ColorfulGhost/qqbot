@@ -31,9 +31,6 @@ public class EventController {
     @Autowired
     MinecraftImpl minecraft;
 
-    @Value("${SLEEP}")
-    String SLEEP;
-
     @Value("${MASTER_QQ}")
     String MASTER_QQ;
 

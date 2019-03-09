@@ -1,9 +1,12 @@
 package cc.vimc.bot.impl;
 
 
+import cc.vimc.bot.dto.UserDTO;
 import cc.vimc.bot.mapper.MinecraftMapper;
 import cc.vimc.bot.rcon.RconClient;
 import cc.vimc.bot.util.HttpUtils;
+import cc.vimc.bot.util.Sha256;
+import com.google.common.hash.Hashing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import static cc.vimc.bot.enums.Apis.SEND_GROUP_MSG;
-import static cc.vimc.bot.enums.Apis.SEND_MSG;
 import static cc.vimc.bot.enums.Fields.GROUP_ID;
 import static cc.vimc.bot.enums.Fields.MESSAGE;
 
@@ -51,6 +51,21 @@ public class MinecraftImpl {
         return minecraftMapper.onlinePlayerList();
     }
 
+    public Boolean getUser(String userName,String password){
+        var userDTO =   minecraftMapper.getUserDTOByAll(userName);
+        //1是加密方案 2是盐 3是sha256  盐
+        List<String> crypts= Arrays.asList(userDTO.getPassword().split("\\$"));
+        var possible = crypts.get(1);
+        var salt = crypts.get(2);
+        var encode = crypts.get(3);
+        String encryptedPassword = "$"+possible+"$"+salt+"$"+ Sha256.sha256(Sha256.sha256(password)+salt);
+        if (userDTO.getPassword().equals(encryptedPassword)){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
     public void postPlayerList(String sendNickName) {
         var players = this.onlinePlayerList();
         var playerSize = players.size();
@@ -76,10 +91,13 @@ public class MinecraftImpl {
     public String sendCommand(String command) {
         try (RconClient client = RconClient.open(MCSERVERHOST, MCRCONPORT, RCONPASSWORD)) {
             var message = client.sendCommand(command).replaceAll("§.*?[0-z]", "");
+            //这里是为了去除服务端返回字符串后面\n换行
             return message.substring(0,message.length()-1);
         } catch (Exception e) {
             logger.error("服务器RCON协议出现错误：{}", e);
             return "链接服务器RCON失败，请联系欧尼酱。";
         }
     }
+
+
 }
