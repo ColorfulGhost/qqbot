@@ -1,5 +1,7 @@
 package cc.vimc.bot.controller;
 
+import cc.vimc.bot.dto.ReturnModel;
+import cc.vimc.bot.enums.EnumConstants;
 import cc.vimc.bot.impl.MinecraftImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,11 +17,16 @@ public class UserController {
 
     @RequestMapping("login")
     @ResponseBody
-    public Boolean login(String username, String password){
+    public ReturnModel login(String username, String password){
+        ReturnModel returnModel = new ReturnModel();
+
         //把username强制转换成小写字母
        username = username.toLowerCase();
-       return minecraft.getUser(username,password);
-//        return s;
-
+       Boolean isSuccess = minecraft.userVerify(username,password);
+       if (isSuccess){
+           returnModel.setCode(EnumConstants.SUCCESS);
+           returnModel.setMsg(EnumConstants.CONSTANTS.get(EnumConstants.SUCCESS));
+       }
+       return returnModel;
     }
 }

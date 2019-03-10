@@ -12,14 +12,4 @@ public class BedEventImpl {
 
     @Value("${QQBOT_URL}")
     public String QQBOT_URL;
-
-    @Scheduled(cron = "30 22 * * *")
-    public Boolean goToBed(){
-        return true;
-    }
-
-    @Scheduled(cron = "0 6 * * *")
-    public Boolean wakeUp(){
-        return true;
-    }
 }

@@ -13,8 +13,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 import static cc.vimc.bot.enums.Commands.LIST;
 import static cc.vimc.bot.enums.Commands.TPS;
 import static cc.vimc.bot.enums.Fields.*;
@@ -32,10 +30,10 @@ public class EventController {
     MinecraftImpl minecraft;
 
     @Value("${MASTER_QQ}")
-    String MASTER_QQ;
+    String masterQQ;
 
     @Value("${MC_GROUP_QQ}")
-    String MC_GROUP_QQ;
+    String mcGroupQQ;
 
     @RequestMapping("/")
     @ResponseBody
@@ -48,7 +46,7 @@ public class EventController {
         } catch (Exception e) {
             logger.error("模型转换出错！：{}", e);
         }
-        if (botRequestDTO == null || sender == null) {
+        if (botRequestDTO == null && sender == null) {
             return;
         }
         String messageType = botRequestDTO.getMessage_type();
@@ -59,7 +57,7 @@ public class EventController {
                 //处理组消息
                 case GROUP:
                     //处理MCQQ群里的消息
-                    if (MC_GROUP_QQ.equals(botRequestDTO.getGroup_id())) {
+                    if (mcGroupQQ.equals(botRequestDTO.getGroup_id())) {
                         //命令
                         switch (message) {
                             case LIST:
@@ -75,7 +73,7 @@ public class EventController {
                     //处理私有消息
                 case PRIVATE:
                     // 这里处理主人QQ消息
-                    if (MASTER_QQ.equals(sender.getUser_id())) {
+                    if (masterQQ.equals(sender.getUser_id())) {
                         if (message.startsWith("//")) {
                             botApi.sendMsg(botRequestDTO, minecraft.sendCommand(message.substring(2)));
                         }

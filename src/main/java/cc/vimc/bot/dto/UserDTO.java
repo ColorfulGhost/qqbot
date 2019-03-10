@@ -1,8 +1,6 @@
 package cc.vimc.bot.dto;
 
 import java.math.BigDecimal;
-import java.util.Date;
-
 public class UserDTO {
     private Integer id;
     private String username;
@@ -18,7 +16,7 @@ public class UserDTO {
         return id;
     }
 
-    public void setId(int Integer) {
+    public void setId(int id) {
         this.id = id;
     }
 
