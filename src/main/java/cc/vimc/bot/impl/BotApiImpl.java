@@ -22,7 +22,7 @@ public class BotApiImpl {
         String messageType = botRequestDTO.getMessage_type();
         var request = new HashMap();
         request.put(MESSAGE_TYPE, botRequestDTO.getMessage_type());
-        request.put(messageType.equals("private") ? "user_id" : messageType + "_id",
+        request.put(messageType.equals(PRIVATE) ? USER_ID: messageType + "_id",
                 botRequestDTO.getGroup_id() == null ? botRequestDTO.getUser_id() : botRequestDTO.getGroup_id());
         request.put(MESSAGE, message);
         HttpUtils.httpPost(qqbotUrl + SEND_MSG, request, Collections.emptyMap());

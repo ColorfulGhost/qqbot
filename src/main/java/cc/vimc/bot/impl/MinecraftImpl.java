@@ -49,15 +49,18 @@ public class MinecraftImpl {
         return minecraftMapper.onlinePlayerList();
     }
 
-    public Boolean userVerify(String userName, String password) {
+    public String userVerifyByToken(String userName, String password) {
         var userDTO = minecraftMapper.getUserDTOByAll(userName);
         //1是加密方案 2是盐 3是sha256  盐
         List<String> crypts = Arrays.asList(userDTO.getPassword().split("\\$"));
         var possible = crypts.get(1);
         var salt = crypts.get(2);
-//        var encode = crypts.get(3);
+        var encode = crypts.get(3);
         String encryptedPassword = "$" + possible + "$" + salt + "$" + Sha256.sha256(Sha256.sha256(password) + salt);
-        return userDTO.getPassword().equals(encryptedPassword);
+        if (userDTO.getPassword().equals(encryptedPassword)) {
+            return Sha256.sha256(salt + encode);
+        }
+        return null;
 
     }
 
@@ -108,9 +111,6 @@ public class MinecraftImpl {
             sendCommand("say 发现肝帝！赶紧休息吧~身体重要，nano希望你能健康游戏~");
             var playersString = formatPlayers(players);
             botApi.sendMsgGrouup(mcGroupQQ, message + playersString);
-            //            onlinePlayerList().forEach(player-> sendCommand("kick "+player+" 早点休息！"));
         }
     }
-
-
 }

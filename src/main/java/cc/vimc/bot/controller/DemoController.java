@@ -14,7 +14,13 @@ import java.util.stream.IntStream;
 
 public class DemoController {
 
-
+    /**
+     * @Description lambda 测试Demo 便于以后即用即查
+     * @author wlwang3
+     * @param
+     * @return java.lang.String
+     * @date 2019/3/16
+     */
     @RequestMapping("test")
     @ResponseBody
     public String test() throws NoSuchFieldException {
@@ -32,7 +38,7 @@ public class DemoController {
         System.out.println(list == copy);
         //随机后add
         var intList = new ArrayList<>();
-        var random = new Random();
+        var random = new Random(233);
         //设置随机种子
         random.setSeed(233L);
         random.ints().limit(10).forEach(intList::add);

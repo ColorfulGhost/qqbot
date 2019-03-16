@@ -4,11 +4,14 @@ import cc.vimc.bot.dto.ReturnModel;
 import cc.vimc.bot.enums.EnumConstants;
 import cc.vimc.bot.impl.MinecraftImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
+@CrossOrigin
 @RequestMapping("user")
 public class UserController {
 
@@ -22,10 +25,14 @@ public class UserController {
 
         //把username强制转换成小写字母
        username = username.toLowerCase();
-       Boolean isSuccess = minecraft.userVerify(username,password);
-       if (isSuccess){
+       String token = minecraft.userVerifyByToken(username,password);
+       if (StringUtils.isEmpty(token)){
+           returnModel.setCode(EnumConstants.GETTOKENFAIL);
+           returnModel.setMsg(EnumConstants.CONSTANTS.get(EnumConstants.GETTOKENFAIL));
+       }else{
            returnModel.setCode(EnumConstants.SUCCESS);
            returnModel.setMsg(EnumConstants.CONSTANTS.get(EnumConstants.SUCCESS));
+           returnModel.setData(token);
        }
        return returnModel;
     }
