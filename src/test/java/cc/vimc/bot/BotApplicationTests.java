@@ -1,8 +1,12 @@
 package cc.vimc.bot;
 
 import cc.vimc.bot.dao.UserDAO;
+import cc.vimc.bot.dto.BotMemoryDTO;
+import cc.vimc.bot.impl.BotApiImpl;
+import cc.vimc.bot.mapper.BotMemoryMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -16,14 +20,29 @@ public class BotApplicationTests {
     @Resource
     UserDAO userDAO;
 
+    @Autowired
+    BotApiImpl botApi;
+
+    @Autowired
+    BotMemoryMapper botMemoryMapper;
     @Test
     public void contextLoads() {
     }
 
     @Test
     public void usertest(){
-
         userDAO.setUserToken("tewst");
     }
 
+    @Test
+    public void botApi(){
+        botApi.getGroupMember("320510534",null);
+    }
+
+    @Test
+    public void botMapper(){
+//        botMapper.insertNiceDay(new BotMemoryDTO("2","3",0));
+//        botMapper.updateNiceDay("2","3",1);
+//        botMapper.selectNiceDay("2","3");
+    }
 }

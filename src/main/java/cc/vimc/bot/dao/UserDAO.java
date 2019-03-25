@@ -17,27 +17,29 @@ public class UserDAO {
     @Autowired
     RedisTemplate redisTemplate;
 
-    public boolean setUserToken(String name) {
-        boolean result = false;
+
+    public String setUserToken(String name) {
+        String key = "user:" + name;
+        String token = "";
         try {
             ValueOperations<String, String> operations = redisTemplate.opsForValue();
-            if (redisTemplate.hasKey(name)) {
-                return false;
+            if (redisTemplate.hasKey(key)) {
+                return operations.get(key);
             }
-            operations.set(name, UUID.randomUUID().toString());
-            redisTemplate.expire(name, 3, TimeUnit.DAYS);
-            result = true;
+            operations.set(key, UUID.randomUUID().toString());
+            redisTemplate.expire(key, 3, TimeUnit.DAYS);
         } catch (Exception e) {
             logger.error("Redis 缓存token失败", e);
         }
-        return result;
+        return getUserToken(name);
     }
 
 
     public String getUserToken(String name) {
-        if (redisTemplate.hasKey(name)) {
+        String key = "user:" + name;
+        if (redisTemplate.hasKey(key)) {
             ValueOperations<String, String> operations = redisTemplate.opsForValue();
-            return operations.get(name);
+            return operations.get(key);
         }
         return null;
     }

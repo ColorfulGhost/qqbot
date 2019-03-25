@@ -1,6 +1,7 @@
 package cc.vimc.bot.impl;
 
 
+import cc.vimc.bot.dao.UserDAO;
 import cc.vimc.bot.mapper.MinecraftMapper;
 import cc.vimc.bot.rcon.RconClient;
 import cc.vimc.bot.util.HttpUtils;
@@ -12,7 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 import static cc.vimc.bot.enums.Apis.SEND_GROUP_MSG;
@@ -42,6 +45,9 @@ public class MinecraftImpl {
     @Autowired
     BotApiImpl botApi;
 
+    @Resource
+    UserDAO userDAO;
+
     @Autowired
     private MinecraftMapper minecraftMapper;
 
@@ -58,10 +64,13 @@ public class MinecraftImpl {
         var encode = crypts.get(3);
         String encryptedPassword = "$" + possible + "$" + salt + "$" + Sha256.sha256(Sha256.sha256(password) + salt);
         if (userDTO.getPassword().equals(encryptedPassword)) {
-            return Sha256.sha256(salt + encode);
+            String token = userDAO.getUserToken(userName);
+            if (StringUtils.isEmpty(token)){
+                token = userDAO.setUserToken(userName);
+            }
+            return token;
         }
         return null;
-
     }
 
     public void postPlayerList(String sendNickName) {
@@ -105,12 +114,12 @@ public class MinecraftImpl {
     public void liverEmperor() {
         var players = onlinePlayerList();
         if (CollectionUtils.isEmpty(players)) {
-            botApi.sendMsgGrouup(mcGroupQQ, "寻找肝帝失败，今晚没有发现肝帝在线！");
+            botApi.sendMsgGroup(mcGroupQQ, "寻找肝帝失败，今晚没有发现肝帝在线！");
         } else {
             var message = "今晚肝帝诞生啦！现在还有" + players.size() + "人在线？！\n";
             sendCommand("say 发现肝帝！赶紧休息吧~身体重要，nano希望你能健康游戏~");
             var playersString = formatPlayers(players);
-            botApi.sendMsgGrouup(mcGroupQQ, message + playersString);
+            botApi.sendMsgGroup(mcGroupQQ, message + playersString);
         }
     }
 }

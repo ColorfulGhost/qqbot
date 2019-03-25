@@ -37,30 +37,40 @@ public class Apis {
     /**
      * 群组匿名用户禁言
      */
-    public static final String set_group_anonymous_ban  = "/set_group_anonymous_ban";
+    public static final String SET_GROUP_ANONYMOUS_BAN  = "/set_group_anonymous_ban";
     /**
      *  群组全员禁言
      */
-    public static final String set_group_whole_ban  = "/set_group_whole_ban";
+    public static final String SET_GROUP_WHOLE_BAN  = "/set_group_whole_ban";
     /**
      *  群组设置管理员
      */
-    public static final String set_group_admin   = "/set_group_admin";
+    public static final String SET_GROUP_ADMIN   = "/set_group_admin";
     /**
      * 群组匿名
      */
-    public static final String set_group_anonymous   = "/set_group_anonymous";
+    public static final String SET_GROUP_ANONYMOUS   = "/set_group_anonymous";
     /**
      * 设置群名片（群备注）
      */
-    public static final String set_group_card   = "/set_group_card";
+    public static final String SET_GROUP_CARD   = "/set_group_card";
     /**
      * 退出群组
      */
-    public static final String set_group_leave   = "/set_group_leave";
+    public static final String SET_GROUP_LEAVE   = "/set_group_leave";
     /**
      * 获取语音
      */
-    public static final String get_record   = "/get_record";
+    public static final String GET_RECORD   = "/get_record";
+
+    /**
+     * 获取群成员信息
+     */
+    public static final String GET_GROUP_MEMBER_INFO   = "/get_group_member_info";
+
+    /**
+     * 获取群成员列表
+     */
+    public static final String GET_GROUP_MEMBER_LIST  = "/get_group_member_list";
 
 }

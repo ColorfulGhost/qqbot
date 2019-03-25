@@ -17,30 +17,36 @@ public class MessageDAO {
     RedisTemplate redisTemplate;
 
     public boolean repeatMessageCount(String groupId, String message) {
-        String key = "group" + ":" + groupId + ":" + message;
+        var key = "group" + ":" + groupId + ":" + message;
         try {
             ValueOperations<String, Integer> operations = redisTemplate.opsForValue();
             operations.increment(key);
             if (redisTemplate.hasKey(key)) {
                 var count = operations.get(key);
                 if (count != null) {
-                    if (count == (int) (Math.random() * 1.5 + 2)) {
-                        if (redisTemplate.delete(key)) {
-                            return true;
-                        }
-                    } else if (count > 6) {
-                        if (redisTemplate.delete(key)) {
-                            return true;
-                        }
+                    if (count == 3) {
+                        return hasSendMessage(key);
                     }
                 }
-
             }
-            redisTemplate.expire(key, 3, TimeUnit.HOURS);
-
+            redisTemplate.expire(key, 2, TimeUnit.HOURS);
         } catch (Exception e) {
             logger.error("Redis 缓存token失败", e);
         }
         return false;
     }
+
+    public boolean hasSendMessage(String key){
+        var hasSendMessage = key + ":hasSend";
+        ValueOperations<String, Boolean> operations = redisTemplate.opsForValue();
+        if (redisTemplate.hasKey(hasSendMessage)){
+            return false;
+        }else {
+            operations.set(hasSendMessage,true);
+        }
+        redisTemplate.expire(hasSendMessage, 2, TimeUnit.HOURS);
+        return true;
+
+    }
+
 }
