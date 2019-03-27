@@ -5,11 +5,15 @@ import cc.vimc.bot.dto.BotRequestDTO;
 import cc.vimc.bot.dto.GroupMemberDTO;
 import cc.vimc.bot.util.HttpUtils;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 import static cc.vimc.bot.enums.Apis.*;
@@ -52,28 +56,41 @@ public class BotApiImpl {
 
     }
 
-    @Async
-    public List<GroupMemberDTO> getGroupMember(String groupId, String userId) {
+    public Map<String,List<GroupMemberDTO>> getGroupMember(List<String> groupIds) {
         Map<String, String> request = new HashMap<>();
-        if (StringUtils.isEmpty(groupId)) {
-            return Collections.emptyList();
+        if (CollectionUtils.isEmpty(groupIds)) {
+            return Collections.emptyMap();
         }
-        request.put(GROUP_ID, groupId);
-        List<GroupMemberDTO> groupMemberDTOList = new ArrayList<>();
-        var result = "";
-        if (StringUtils.isEmpty(userId)) {
-            result = HttpUtils.httpPost(qqbotUrl + GET_GROUP_MEMBER_LIST, request, Collections.emptyMap());
-            var data = JSON.parseObject(result).getString("data");
-            groupMemberDTOList = JSON.parseArray(data, GroupMemberDTO.class);
-
-        } else {
-            request.put(USER_ID, userId);
-            result = HttpUtils.httpPost(qqbotUrl + GET_GROUP_MEMBER_INFO, request, Collections.emptyMap());
-            var data = JSON.parseObject(result).getString("data");
-            var groupMemberDTO = JSON.parseObject(data, GroupMemberDTO.class);
-            groupMemberDTOList.add(groupMemberDTO);
+        Map<String,List<GroupMemberDTO>> groupMemberDTOListMap = new HashMap<>();
+        for (String groupId : groupIds) {
+            request.put(GROUP_ID, groupId);
+            var data = JSON.parseObject(HttpUtils.httpPost(qqbotUrl + GET_GROUP_MEMBER_LIST, request, Collections.emptyMap())).getString("data");
+            List<GroupMemberDTO> memberDTOList = JSON.parseArray(data, GroupMemberDTO.class);
+            groupMemberDTOListMap.put(groupId,memberDTOList);
         }
-        return groupMemberDTOList;
 
+
+        return groupMemberDTOListMap;
+    }
+
+//    public List<String> getFriendList(){
+//        HttpUtils.httpPost(qqbotUrl+_GET_FRIEND_LIST,Collections.emptyMap(),Collections.emptyMap());
+//    }
+
+    public List<String> getGroupList() {
+        var groupIdList = new ArrayList<String>();
+        var result = HttpUtils.httpPost(qqbotUrl + GET_GROUP_LIST, Collections.emptyMap(), Collections.emptyMap());
+        var resultObj = JSON.parseArray(JSON.parseObject(result).getString("data"), JSONObject.class);
+        resultObj.forEach(data -> groupIdList.add(data.getString("group_id")));
+        return groupIdList;
+    }
+
+
+    @Async
+    public void sendLike(String userId) {
+        Map<String, String> request = new HashMap<>();
+        request.put(USER_ID, userId);
+        request.put(TIMES, "10");
+        HttpUtils.httpPost(qqbotUrl + SEND_LIKE, request, Collections.emptyMap());
     }
 }

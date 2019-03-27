@@ -73,4 +73,16 @@ public class Apis {
      */
     public static final String GET_GROUP_MEMBER_LIST  = "/get_group_member_list";
 
+    /**
+     * 获取好友列表
+     */
+    public static final String _GET_FRIEND_LIST  = "/_get_friend_list";
+
+    /**
+     * 获取好友列表
+     */
+    public static final String GET_GROUP_LIST  = "/get_group_list";
+
+
+
 }

@@ -107,6 +107,9 @@ public class BotEventImpl {
                 return true;
 
             case NICE_DAY:
+                if (msgSplitList.size()<2){
+                    return false;
+                }
                 String id;
                 var msgNickName = "狗群员们！";
                 if (groupId == null) {
@@ -120,6 +123,7 @@ public class BotEventImpl {
                 try {
                     niceDaySwitch = Integer.parseInt(msgSplitList.get(1));
                 } catch (NumberFormatException e) {
+                    logger.error("接受出错",e);
                     return false;
                 }
                 var result = false;

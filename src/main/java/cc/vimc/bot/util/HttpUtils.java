@@ -131,7 +131,7 @@ public class HttpUtils {
                             java.net.URLEncoder.encode(parameters.get(name) == null ? "" : parameters.get(name),
                                     "UTF-8")).append("&");
                 }
-                String temp_params = sb.toString();
+                String temp_params = sb.toString()+" ";
                 params = temp_params.substring(0, temp_params.length() - 1);
             }
             logger.info(url+"?"+params);
