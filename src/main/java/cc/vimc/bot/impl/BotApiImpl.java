@@ -86,7 +86,7 @@ public class BotApiImpl {
     }
 
 
-    @Async
+//    @Async
     public void sendLike(String userId) {
         Map<String, String> request = new HashMap<>();
         request.put(USER_ID, userId);

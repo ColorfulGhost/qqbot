@@ -19,13 +19,14 @@ public class Commands {
 
 
     public static final Map<String,String> ALL_COMMANDS = new LinkedHashMap<>(){{
-        put(HELP,"Hi~使用help来查看なの酱的使用手册");
-        put(LIST,"查询所有在线玩家");
+        put(HELP,"使用help来查看なの酱的使用手册");
+        put(LIST,"查询在线玩家列表");
         put(TPS,"查询游戏内TPS状态");
         put(POINTS_LEAD,"查询游戏内点券排行榜");
         put(NICE_DAY,"なの酱会每天向你致安~(\"/nice day 0(关闭) 1(开启)\")");
         put(FUCK,"花Q！");
-        put(LIKE,"开启点赞！");
+        put("Other","全员点赞默认开启 复读功能默认开启");
+//        put(LIKE,"开启点赞！");
     }};
 
     public static String getCommand(String name) {

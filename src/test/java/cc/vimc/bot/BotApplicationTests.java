@@ -39,13 +39,14 @@ public class BotApplicationTests {
         userDAO.setUserToken("tewst");
     }
 
-//    @Test
-//    public void botApi(){
+    @Test
+    public void botApi(){
 //        botApi.getGroupMember("320510534",null);
-//    }
+        botSchedule.goodNight();
+    }
 
-//    @Test
-//    public void botMapper(){
-//        botSchedule.likeGroupAllUser();
-//    }
+    @Test
+    public void botMapper(){
+        botSchedule.likeGroupAllUser();
+    }
 }
