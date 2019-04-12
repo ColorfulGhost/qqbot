@@ -4,7 +4,6 @@ package cc.vimc.bot.impl;
 import cc.vimc.bot.dao.UserDAO;
 import cc.vimc.bot.mapper.MinecraftMapper;
 import cc.vimc.bot.rcon.RconClient;
-import cc.vimc.bot.util.HttpUtils;
 import cc.vimc.bot.util.Sha256;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,22 +72,18 @@ public class MinecraftImpl {
         return null;
     }
 
-    public void postPlayerList(String sendNickName) {
+    public String postPlayerList(String sendNickName) {
         var players = onlinePlayerList();
         var playerSize = players.size();
-        var request = new HashMap();
-        request.put(GROUP_ID, mcGroupQQ);
-
+        var wall = "";
+        var message ="";
         if (CollectionUtils.isEmpty(players)) {
-            var message = "Hi~" + sendNickName + "，当前没有在线玩家。";
-            request.put(MESSAGE, message);
-            HttpUtils.httpPost(qqbotUrl + SEND_GROUP_MSG, request, Collections.emptyMap());
+             message = "Hi~" + sendNickName + "，当前没有在线玩家。";
         } else {
-            var wall = "Hi~" + sendNickName + "\n当前在线玩家：" + playerSize + "人\n";
-            String message = formatPlayers(players);
-            request.put(MESSAGE, wall + message);
-            HttpUtils.httpPost(qqbotUrl + SEND_GROUP_MSG, request, Collections.emptyMap());
+            wall= "Hi~" + sendNickName + "\n当前在线玩家：" + playerSize + "人\n";
+             message = formatPlayers(players);
         }
+        return wall+message;
     }
 
     public String sendCommand(String command) {
