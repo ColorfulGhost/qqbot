@@ -38,10 +38,10 @@ public class BotScheduleImpl {
         var needNiceDayList = botMemoryMapper.selectNiceDayAll(null, 1);
         for (BotMemoryDTO botMemoryDTO : needNiceDayList) {
             if (botMemoryDTO.getType().equals(GROUP)) {
-                botApi.sendMsgGroup(botMemoryDTO.getId(), "[CQ:image,file=24C8E346B782329A8496CEB1C1E2D4EB.png,url=https://gchat.qpic.cn/gchatpic_new/815666528/3810510534-2797522169-24C8E346B782329A8496CEB1C1E2D4EB/0?vuin=1277841527&amp;term=2]");
+                botApi.sendMsgGroup(botMemoryDTO.getId(), "[CQ:image,file=1EAE238AFC37A25A8449BA20001D861B.png,url=https://gchat.qpic.cn/gchatpic_new/815666528/3810510534-2240241385-1EAE238AFC37A25A8449BA20001D861B/0?vuin=1277841527&amp;term=2]");
             }
             if (botMemoryDTO.getType().equals(PRIVATE)) {
-                botApi.sendMsgPrivate(botMemoryDTO.getId(), "你个肥宅！赶紧睡觉！晚安w！[CQ:image,file=1EAE238AFC37A25A8449BA20001D861B.png,url=https://gchat.qpic.cn/gchatpic_new/815666528/3810510534-2240241385-1EAE238AFC37A25A8449BA20001D861B/0?vuin=1277841527&amp;term=2]");
+                botApi.sendMsgPrivate(botMemoryDTO.getId(), "[CQ:image,file=24C8E346B782329A8496CEB1C1E2D4EB.png,url=https://gchat.qpic.cn/gchatpic_new/815666528/3810510534-2797522169-24C8E346B782329A8496CEB1C1E2D4EB/0?vuin=1277841527&amp;term=2]");
             }
         }
     }

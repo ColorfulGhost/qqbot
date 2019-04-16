@@ -5,16 +5,18 @@ import cc.vimc.bot.dto.BotRequestDTO;
 import cc.vimc.bot.dto.GroupMemberDTO;
 import cc.vimc.bot.dto.TulingReponseDTO;
 import cc.vimc.bot.dto.TulingRequestDTO;
-import cn.hutool.core.util.ReUtil;
+import cc.vimc.bot.util.HttpUtils;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -41,7 +43,14 @@ public class BotApiImpl {
 //        for (String text : Pattern.compile(regex).split(message)) {
 //            extractMessage.append(text);
 //        }
-
+        //开头为!是其他服务的功能
+        if (botRequestDTO.getMessage().startsWith("!")){
+            return;
+        }
+        //暂时不对图灵支持图片处理 太弱鸡了
+        if (tulingRequestDTO.getReqType()==1){
+            return;
+        }
 
         var reponse = HttpUtil.post(tulingUrl, JSONUtil.toJsonStr(tulingRequestDTO));
         var tulingReponseDTO = JSON.parseObject(reponse, TulingReponseDTO.class);
@@ -77,7 +86,7 @@ public class BotApiImpl {
         request.put(messageType.equals(PRIVATE) ? USER_ID : messageType + "_id",
                 botRequestDTO.getGroup_id() == null ? botRequestDTO.getUser_id() : botRequestDTO.getGroup_id());
         request.put(MESSAGE, message);
-        HttpUtil.post(qqbotUrl + SEND_MSG, request);
+        HttpUtils.post(qqbotUrl , SEND_MSG, request);
     }
 
     /**
@@ -91,7 +100,7 @@ public class BotApiImpl {
         var request = new HashMap();
         request.put(GROUP_ID, groupId);
         request.put(MESSAGE, message);
-        HttpUtil.post(qqbotUrl + SEND_GROUP_MSG, request);
+        HttpUtils.post(qqbotUrl ,SEND_GROUP_MSG, request);
     }
 
     /**
@@ -105,7 +114,7 @@ public class BotApiImpl {
         var request = new HashMap();
         request.put(USER_ID, userId);
         request.put(MESSAGE, message);
-        HttpUtil.post(qqbotUrl + SEND_PRIVATE_MSG, request);
+        HttpUtils.post(qqbotUrl , SEND_PRIVATE_MSG, request);
     }
 
     /**
@@ -122,7 +131,7 @@ public class BotApiImpl {
         Map<String, List<GroupMemberDTO>> groupMemberDTOListMap = new HashMap<>();
         for (String groupId : groupIds) {
             request.put(GROUP_ID, groupId);
-            var data = JSON.parseObject(HttpUtil.post(qqbotUrl + GET_GROUP_MEMBER_LIST, request)).getString("data");
+            var data = JSON.parseObject(HttpUtils.post(qqbotUrl , GET_GROUP_MEMBER_LIST, request)).getString("data");
             List<GroupMemberDTO> memberDTOList = JSON.parseArray(data, GroupMemberDTO.class);
             groupMemberDTOListMap.put(groupId, memberDTOList);
         }
@@ -136,7 +145,7 @@ public class BotApiImpl {
      */
     public List<String> getGroupList() {
         var groupIdList = new ArrayList<String>();
-        var result = HttpUtil.post(qqbotUrl + GET_GROUP_LIST, Collections.emptyMap());
+        var result = HttpUtils.post(qqbotUrl ,GET_GROUP_LIST, Collections.emptyMap());
         var resultObj = JSON.parseArray(JSON.parseObject(result).getString("data"), JSONObject.class);
         resultObj.forEach(data -> groupIdList.add(data.getString("group_id")));
         return groupIdList;
@@ -152,6 +161,6 @@ public class BotApiImpl {
         Map<String, Object> request = new HashMap<>();
         request.put(USER_ID, userId);
         request.put(TIMES, "10");
-        HttpUtil.post(qqbotUrl + SEND_LIKE, request);
+        HttpUtils.post(qqbotUrl ,SEND_LIKE, request);
     }
 }

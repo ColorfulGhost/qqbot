@@ -58,7 +58,31 @@ public class BotEventImpl {
             logger.error("模型转换出错！", e);
             return;
         }
-        var messageType = botRequestDTO.getMessage_type();
+        //数据组装
+        dataAssembly(botRequestDTO, tulingRequestDTO);
+
+        //这里是处理所有消息的地方  如果存在条件则会在这里返回
+        if (anyEvent(botRequestDTO)) {
+            return;
+        }
+        if (!StringUtils.isEmpty(botRequestDTO.getMessage())) {
+            switch (botRequestDTO.getMessage_type()) {
+                //处理组消息
+                case GROUP:
+                    groupEvent(botRequestDTO, tulingRequestDTO);
+                    break;
+                //处理私有消息
+                case PRIVATE:
+                    privateEvent(botRequestDTO, tulingRequestDTO);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
+
+    private void dataAssembly(BotRequestDTO botRequestDTO, TulingRequestDTO tulingRequestDTO) {
         var message = botRequestDTO.getMessage();
 
         //给图灵用户信息赋值
@@ -97,27 +121,6 @@ public class BotEventImpl {
             }
         }
         tulingRequestDTO.setPerception(perception);
-
-
-        //这里是处理所有消息的地方  如果存在条件则会在这里返回
-        if (anyEvent(botRequestDTO)) {
-            return;
-        }
-        if (!StringUtils.isEmpty(message)) {
-            switch (messageType) {
-                //处理组消息
-                case GROUP:
-                    groupEvent(botRequestDTO, tulingRequestDTO);
-                    break;
-                //处理私有消息
-                case PRIVATE:
-                    privateEvent(botRequestDTO, tulingRequestDTO);
-                    break;
-                default:
-                    break;
-            }
-        }
-
     }
 
     /**

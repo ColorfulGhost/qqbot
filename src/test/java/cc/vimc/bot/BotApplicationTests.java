@@ -49,7 +49,7 @@ public class BotApplicationTests {
     @Test
     public void botApi() {
 //        botApi.getGroupMember("320510534",null);
-//        botSchedule.goodNight();
+        botSchedule.goodNight();
 //        botSchedule.goodMorning();
     }
 
