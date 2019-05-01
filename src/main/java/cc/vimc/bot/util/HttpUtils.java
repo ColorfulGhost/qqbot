@@ -1,9 +1,11 @@
 package cc.vimc.bot.util;
 
+import cn.hutool.core.map.MapUtil;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.util.MapUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
@@ -28,9 +30,17 @@ public class HttpUtils {
 
 
     public static String post(String baseUrl, String addUrl, Map<String, Object> params) {
+        return post(baseUrl + addUrl, params,null);
+    }
+
+    public static String post(String fullUrl, Map<String, Object> params,Map<String,String> header) {
+        if (MapUtil.isNotEmpty(header)){
+
+        }
+
+
 
         var client = HttpClient.newHttpClient();
-        var fullUrl = baseUrl + addUrl;
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(fullUrl))
                 .header("Content-Type", "application/json")
@@ -40,9 +50,7 @@ public class HttpUtils {
         HttpResponse<String> response = null;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return response == null ? "" : response.body();

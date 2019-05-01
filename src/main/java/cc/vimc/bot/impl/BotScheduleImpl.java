@@ -3,8 +3,10 @@ package cc.vimc.bot.impl;
 import cc.vimc.bot.dto.BotMemoryDTO;
 import cc.vimc.bot.mapper.BotMemoryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -13,17 +15,33 @@ import static cc.vimc.bot.enums.Fields.PRIVATE;
 
 @Service
 public class BotScheduleImpl {
-
+    @Value("${MC_GROUP_QQ}")
+    String mcGroupQQ;
     @Autowired
     BotApiImpl botApi;
     @Autowired
     BotMemoryMapper botMemoryMapper;
+    @Autowired MinecraftImpl minecraft;
 
-
+    @Scheduled(cron = "0 25 3 ? * *")
+    public void liverEmperor() {
+        var players = minecraft.onlinePlayerList();
+        if (CollectionUtils.isEmpty(players)) {
+            botApi.sendMsgGroup(mcGroupQQ, "寻找肝帝失败，今晚没有发现肝帝在线！");
+        } else {
+            var message = "今晚肝帝诞生啦！现在还有" + players.size() + "人在线？！\n";
+            minecraft.sendCommand("say 发现肝帝！赶紧休息吧~身体重要，nano希望你能健康游戏~");
+            var playersString = minecraft.formatPlayers(players);
+            botApi.sendMsgGroup(mcGroupQQ, message + playersString);
+        }
+    }
     @Scheduled(cron = "0 20 6 ? * *")
     public void goodMorning() {
         var needNiceDayList = botMemoryMapper.selectNiceDayAll(null, 1);
         for (BotMemoryDTO botMemoryDTO : needNiceDayList) {
+            var random = new Random(System.currentTimeMillis());
+            var randomInt = random.nextInt(20) % 10;
+            if (randomInt>3)
             if (botMemoryDTO.getType().equals(GROUP)) {
                 botApi.sendMsgGroup(botMemoryDTO.getId(), "[CQ:image,file=15E9DA60F14104A38746621A477F59FD.jpg,url=https://gchat.qpic.cn/gchatpic_new/815666528/3810510534-2292468112-15E9DA60F14104A38746621A477F59FD/0?vuin=1277841527&amp;term=2]");
             }

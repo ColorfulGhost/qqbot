@@ -1,23 +1,40 @@
 package cc.vimc.bot.impl;
 
 import cc.vimc.bot.dao.MessageDAO;
+import cc.vimc.bot.dto.BaiduAGDTO;
 import cc.vimc.bot.dto.BotRequestDTO;
 
 import cc.vimc.bot.dto.Sender;
 import cc.vimc.bot.dto.TulingRequestDTO;
 import cc.vimc.bot.mapper.BotMemoryMapper;
+import cn.hutool.core.img.ImgUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReUtil;
+import cn.hutool.extra.qrcode.QrCodeUtil;
+import cn.hutool.extra.qrcode.QrConfig;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 
 import javax.annotation.Resource;
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Files;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -35,6 +52,9 @@ public class BotEventImpl {
 
     @Autowired
     MinecraftImpl minecraft;
+
+    @Autowired
+    BaiduAiImpl baiduAi;
 
     @Resource
     MessageDAO messageDAO;
@@ -126,7 +146,7 @@ public class BotEventImpl {
     /**
      * @param botRequestDTO
      * @return void
-     * @Description 处理任意消息
+     * @Description 处理任意消息 处理完成会返回true
      * @author wlwang3
      * @date 2019/3/14
      */
@@ -138,17 +158,71 @@ public class BotEventImpl {
         var messageType = botRequestDTO.getMessage_type();
         var groupId = botRequestDTO.getGroup_id();
         List<String> msgSplitList = Arrays.asList(message.split(" "));
-
-        switch (msgSplitList.get(0)) {
-            case HELP:
-                return help(botRequestDTO);
-            case FUCK:
-                return fuck(botRequestDTO);
-            case NICE_DAY:
-                return niceDay(botRequestDTO, userId, nickName, messageType, groupId, msgSplitList);
-            default:
-                return false;
+        if (CollectionUtils.isEmpty(msgSplitList)) {
+            return true;
+        } else {
+            switch (msgSplitList.get(0)) {
+                case HELP:
+                    return help(botRequestDTO);
+                case FUCK:
+                    return fuck(botRequestDTO);
+                case KG:
+                    return kg(botRequestDTO);
+                case QR:
+                    return qr(botRequestDTO, msgSplitList.get(1));
+                case NICE_DAY:
+                    return niceDay(botRequestDTO, userId, nickName, messageType, groupId, msgSplitList);
+                default:
+                    return false;
+            }
         }
+    }
+
+    private boolean kg(BotRequestDTO botRequestDTO) {
+        try {
+            String regex = "\\[CQ:(image|face|record),file=(.*?),url=(.*?)\\]";
+            if ("image".equals(ReUtil.get(regex, botRequestDTO.getMessage(), 1))) {
+                var imageUrl = ReUtil.get(regex, botRequestDTO.getMessage(), 3);
+
+                var baiduAGDTO = baiduAi.advancedGeneral(imageUrl);
+                if (baiduAGDTO.getResult_num()==0){
+                    return false;
+                }
+                var resultMessage = new StringBuilder();
+                for (BaiduAGDTO.Result result : baiduAGDTO.getResult()) {
+                    resultMessage.append(result.getKeyword() + "||" + result.getScore() * 100 + "%相似度\n");
+                }
+                botApi.sendMsg(botRequestDTO, resultMessage.toString());
+        }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        return true;
+//        baiduAi.advancedGeneral();
+    }
+
+    private boolean qr(BotRequestDTO botRequestDTO, String commandContent) {
+        QrConfig config = new QrConfig(400, 400);
+        config.setMargin(1);
+        BufferedImage userImage = null;
+        try {
+            URL url = new URL("https://q1.qlogo.cn/g?b=qq&nk=" + botRequestDTO.getUser_id() + "&s=100");
+            userImage = ImageIO.read(url);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        config.setImg(userImage);
+        var qrFile = QrCodeUtil.generate(commandContent, config, FileUtil.file("qrcode.jpg"));
+        byte[] bytes;
+        try {
+            bytes = Files.readAllBytes(qrFile.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        var base64 = Base64.getEncoder().encodeToString(bytes);
+        botApi.sendMsg(botRequestDTO, "[CQ:image,file=base64://" + base64 + "]");
+        return true;
     }
 
     private boolean help(BotRequestDTO botRequestDTO) {
@@ -168,9 +242,6 @@ public class BotEventImpl {
     }
 
     private boolean niceDay(BotRequestDTO botRequestDTO, String userId, String nickName, String messageType, String groupId, List<String> msgSplitList) {
-        if (msgSplitList.size() < 2) {
-            return true;
-        }
         String id;
         var msgNickName = "狗群员们！";
         if (groupId == null) {
@@ -270,7 +341,10 @@ public class BotEventImpl {
                     botApi.sendMsg(botRequestDTO, minecraft.sendCommand(TPS.substring(1)));
                     break;
                 case POINTS_LEAD:
-                    botApi.sendMsg(botRequestDTO, minecraft.sendCommand(POINTS_LEAD.substring(1)));
+                    botApi.sendMsg(botRequestDTO,
+                            ReUtil.get("(\\d)\\.(.*)(\\s-\\s)(\\d+)",
+                                    minecraft.sendCommand(POINTS_LEAD.substring(1)),
+                                    0) + " 点卷");
                     break;
                 default:
                     break;

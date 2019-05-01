@@ -38,8 +38,7 @@ public class MinecraftImpl {
     @Value("${QQBOT_URL}")
     String qqbotUrl;
 
-    @Value("${MC_GROUP_QQ}")
-    String mcGroupQQ;
+
 
     @Autowired
     BotApiImpl botApi;
@@ -97,7 +96,7 @@ public class MinecraftImpl {
         }
     }
 
-    private String formatPlayers(List<String> players) {
+    public String formatPlayers(List<String> players) {
         Optional<String> playerListOptionals = players.stream().reduce((s1, s2) -> s1 + "\n" + s2);
         if (playerListOptionals.isPresent()) {
             return playerListOptionals.get();
@@ -105,16 +104,5 @@ public class MinecraftImpl {
         return null;
     }
 
-    @Scheduled(cron = "0 25 3 ? * *")
-    public void liverEmperor() {
-        var players = onlinePlayerList();
-        if (CollectionUtils.isEmpty(players)) {
-            botApi.sendMsgGroup(mcGroupQQ, "寻找肝帝失败，今晚没有发现肝帝在线！");
-        } else {
-            var message = "今晚肝帝诞生啦！现在还有" + players.size() + "人在线？！\n";
-            sendCommand("say 发现肝帝！赶紧休息吧~身体重要，nano希望你能健康游戏~");
-            var playersString = formatPlayers(players);
-            botApi.sendMsgGroup(mcGroupQQ, message + playersString);
-        }
-    }
+
 }
