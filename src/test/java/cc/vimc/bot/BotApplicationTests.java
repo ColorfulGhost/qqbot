@@ -1,7 +1,8 @@
 package cc.vimc.bot;
 
 import cc.vimc.bot.dao.UserDAO;
-import cc.vimc.bot.impl.BaiduAiImpl;
+import cc.vimc.bot.provider.ImageRec;
+import cc.vimc.bot.provider.TranslateUtil;
 import cc.vimc.bot.impl.BotApiImpl;
 import cc.vimc.bot.impl.BotScheduleImpl;
 import cc.vimc.bot.mapper.BotMemoryMapper;
@@ -36,9 +37,6 @@ public class BotApplicationTests {
     @Autowired
     BotScheduleImpl botSchedule;
 
-    @Autowired
-    BaiduAiImpl baiduAi;
-
     @Test
     public void contextLoads() {
     }
@@ -57,9 +55,11 @@ public class BotApplicationTests {
 //        botApi.getGroupMember("320510534",null);
 //        botSchedule.goodNight();
 //        baiduAi.getToken();
-        baiduAi.advancedGeneral("");
+//        imageRec("http://i.acg.gy/VOYIW2u.jpg");
 //        log.error(baiduAi.getToken());
 //        botSchedule.goodMorning();
+        TranslateUtil.Translate("天气不错");
+
     }
 
     @Test

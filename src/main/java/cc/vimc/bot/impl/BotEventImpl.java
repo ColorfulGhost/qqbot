@@ -1,5 +1,7 @@
 package cc.vimc.bot.impl;
 
+import cc.vimc.bot.model.BotMemory;
+import cc.vimc.bot.provider.ImageRec;
 import cc.vimc.bot.dao.MessageDAO;
 import cc.vimc.bot.dto.BaiduAGDTO;
 import cc.vimc.bot.dto.BotRequestDTO;
@@ -7,14 +9,12 @@ import cc.vimc.bot.dto.BotRequestDTO;
 import cc.vimc.bot.dto.Sender;
 import cc.vimc.bot.dto.TulingRequestDTO;
 import cc.vimc.bot.mapper.BotMemoryMapper;
-import cn.hutool.core.img.ImgUtil;
+import cc.vimc.bot.provider.Tuling123;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import cn.hutool.extra.qrcode.QrConfig;
-import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +26,8 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageOutputStream;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
@@ -52,10 +49,6 @@ public class BotEventImpl {
 
     @Autowired
     MinecraftImpl minecraft;
-
-    @Autowired
-    BaiduAiImpl baiduAi;
-
     @Resource
     MessageDAO messageDAO;
     @Autowired
@@ -172,10 +165,35 @@ public class BotEventImpl {
                     return qr(botRequestDTO, msgSplitList.get(1));
                 case NICE_DAY:
                     return niceDay(botRequestDTO, userId, nickName, messageType, groupId, msgSplitList);
+                case JP:
+                    return jp(botRequestDTO,msgSplitList.get(1));
                 default:
                     return false;
             }
         }
+    }
+
+    private boolean jp(BotRequestDTO botRequestDTO,String commandContent) {
+        String id ;
+        if (Optional.of(botRequestDTO.getGroup_id()).isPresent()){
+            id =  botRequestDTO.getGroup_id();
+        }else {
+            id = botRequestDTO.getUser_id();
+        }
+        var botMemory = new BotMemory(id,botRequestDTO.getMessage_type(),null,Integer.parseInt(commandContent));
+        var botMemoryResult =botMemoryMapper.selectBotMemory(botMemory);
+        if (Optional.of(botMemoryResult).isPresent()){
+            var result = botMemoryMapper.updateBotMemory(botMemory);
+            if (result) {
+                botApi.sendMsg(botRequestDTO,"更新成功");
+            }
+        }else {
+           var result = botMemoryMapper.insertBotMemory(botMemory);
+            if (result) {
+                botApi.sendMsg(botRequestDTO,"插入成功");
+            }
+        }
+        return true;
     }
 
     private boolean kg(BotRequestDTO botRequestDTO) {
@@ -183,22 +201,22 @@ public class BotEventImpl {
             String regex = "\\[CQ:(image|face|record),file=(.*?),url=(.*?)\\]";
             if ("image".equals(ReUtil.get(regex, botRequestDTO.getMessage(), 1))) {
                 var imageUrl = ReUtil.get(regex, botRequestDTO.getMessage(), 3);
-
-                var baiduAGDTO = baiduAi.advancedGeneral(imageUrl);
-                if (baiduAGDTO.getResult_num()==0){
-                    return false;
+                var baiduAGDTOList = ImageRec.advancedGeneral(imageUrl);
+                if (CollectionUtils.isEmpty(baiduAGDTOList)) {
+                    botApi.sendMsg(botRequestDTO, "没有查询到该图片相关信息呀！");
+                    return true;
                 }
                 var resultMessage = new StringBuilder();
-                for (BaiduAGDTO.Result result : baiduAGDTO.getResult()) {
-                    resultMessage.append(result.getKeyword() + "||" + result.getScore() * 100 + "%相似度\n");
+                for (BaiduAGDTO agdto : baiduAGDTOList) {
+                    resultMessage.append(agdto.getKeyword() + " || " + agdto.getScore() * 100 + "%相似度\n");
                 }
+
                 botApi.sendMsg(botRequestDTO, resultMessage.toString());
-        }
+            }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
         return true;
-//        baiduAi.advancedGeneral();
     }
 
     private boolean qr(BotRequestDTO botRequestDTO, String commandContent) {
@@ -250,7 +268,7 @@ public class BotEventImpl {
         } else {
             id = botRequestDTO.getGroup_id();
         }
-        var botMemoryDTO = botMemoryMapper.selectNiceDay(id, messageType);
+        var botMemoryDTO = botMemoryMapper.selectBotMemory(new BotMemory(id, messageType, null, null));
         int niceDaySwitch;
         try {
             niceDaySwitch = Integer.parseInt(msgSplitList.get(1));
@@ -260,30 +278,31 @@ public class BotEventImpl {
         }
         var result = false;
         if (0 == niceDaySwitch || 1 == niceDaySwitch) {
-            var selectNiceDay = botMemoryMapper.selectNiceDay(id, messageType);
             if (botMemoryDTO == null) {
-                result = botMemoryMapper.insertNiceDay(id, messageType, niceDaySwitch);
+                result = botMemoryMapper.insertBotMemory(new BotMemory(id, messageType, niceDaySwitch, null));
             } else {
-                if (selectNiceDay.getNiceDay() == 1 && niceDaySwitch == 1) {
-                    botApi.sendMsg(botRequestDTO, "嗯！？我已经记住了呢！不用再提醒我啦！");
+                if (botMemoryDTO.getNiceDay() == 1 && niceDaySwitch == 1) {
+                    botApi.sendMsg(botRequestDTO, "嗯！？我已经记住了！不要再提醒我了！");
                     return true;
                 }
-                if (selectNiceDay.getNiceDay() == 0 && niceDaySwitch == 0) {
-                    botApi.sendMsg(botRequestDTO, "QAQ！我已经是关闭状态了！为什么还要再关一次！");
+                if (botMemoryDTO.getNiceDay() == 0 && niceDaySwitch == 0) {
+                    botApi.sendMsg(botRequestDTO, "QAQ！我已经是关闭状态了！还要再关一次！？");
                     return true;
                 }
-                result = botMemoryMapper.updateNiceDay(id, messageType, niceDaySwitch);
+                result = botMemoryMapper.updateBotMemory(new BotMemory(id, messageType, niceDaySwitch, null));
             }
             if (result) {
                 if (niceDaySwitch == 1) {
-                    botApi.sendMsg(botRequestDTO, "Hi~" + msgNickName + " なの酱记住啦！");
+                    botApi.sendMsg(botRequestDTO, "Hi~" + msgNickName + " 我已经记住了！");
+                    return true;
                 }
                 if (niceDaySwitch == 0) {
-                    botApi.sendMsg(botRequestDTO, msgNickName + " QAQ 是不想要我了吗！");
+                    botApi.sendMsg(botRequestDTO, msgNickName + "是不想要我了吗○rz");
+                    return true;
                 }
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -306,7 +325,7 @@ public class BotEventImpl {
             case LIGHT:
                 break;
             default:
-                botApi.tulingRequest(botRequestDTO, tulingRequestDTO);
+                botApi.sendMsgPrivate(botRequestDTO.getUser_id(), Tuling123.tulingRequest(tulingRequestDTO));
                 break;
         }
     }
@@ -328,7 +347,7 @@ public class BotEventImpl {
         var regexAt = "\\[CQ:(at),qq=(.*?)\\]";
         var atQQ = ReUtil.findAll(regexAt, message, 2, new ArrayList<>());
         if (atQQ.contains(botRequestDTO.getSelf_id())) {
-            botApi.tulingRequest(botRequestDTO, tulingRequestDTO);
+            botApi.sendMsgGroup(botRequestDTO.getGroup_id(), Tuling123.tulingRequest(tulingRequestDTO));
         }
         //处理MCQQ群里的消息
         if (mcGroupQQ.equals(botRequestDTO.getGroup_id())) {

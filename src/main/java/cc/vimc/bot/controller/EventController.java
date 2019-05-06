@@ -40,7 +40,7 @@ public class EventController {
         try {
             botEvent.botEventHandle(request);
         } catch (Exception e) {
-            logger.error("机器人处理事件失败：{}",e);
+            logger.error("机器人处理事件失败："+e.getMessage(),e);
         }
     }
 }

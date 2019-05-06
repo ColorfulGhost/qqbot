@@ -3,22 +3,13 @@ package cc.vimc.bot.impl;
 
 import cc.vimc.bot.dto.BotRequestDTO;
 import cc.vimc.bot.dto.GroupMemberDTO;
-import cc.vimc.bot.dto.TulingReponseDTO;
-import cc.vimc.bot.dto.TulingRequestDTO;
 import cc.vimc.bot.util.HttpUtils;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
-import java.io.IOException;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static cc.vimc.bot.enums.Apis.*;
 import static cc.vimc.bot.enums.Fields.*;
@@ -26,51 +17,8 @@ import static cc.vimc.bot.enums.Fields.*;
 
 @Service
 public class BotApiImpl {
-
     @Value("${QQBOT_URL}")
     String qqbotUrl;
-
-    @Value("${tuling123.apiurl}")
-    String tulingUrl;
-
-
-    public void tulingRequest(BotRequestDTO botRequestDTO, TulingRequestDTO tulingRequestDTO) {
-//        var message = botRequestDTO.getMessage();
-//        //匹配CQ 图片 表情 语音
-//        String regex = "\\[CQ:(image|face|record|at),file=(.*?),url=(.*?)\\]";
-//        //图片和资源混合消息进行提取出文字消息
-//        var extractMessage = new StringBuilder();
-//        for (String text : Pattern.compile(regex).split(message)) {
-//            extractMessage.append(text);
-//        }
-        //开头为!是其他服务的功能
-        if (botRequestDTO.getMessage().startsWith("!")){
-            return;
-        }
-        //暂时不对图灵支持图片处理 太弱鸡了
-        if (tulingRequestDTO.getReqType()==1){
-            return;
-        }
-
-        var reponse = HttpUtil.post(tulingUrl, JSONUtil.toJsonStr(tulingRequestDTO));
-        var tulingReponseDTO = JSON.parseObject(reponse, TulingReponseDTO.class);
-        var sendMessage = new StringBuilder();
-        for (TulingReponseDTO.Results result : tulingReponseDTO.getResults()) {
-            if ("text".equals(result.getResultType())) {
-                sendMessage.append(result.getValues().getText());
-            }
-            if ("url".equals(result.getResultType())) {
-                sendMessage.append(result.getValues().getUrl() + "\n");
-            }
-        }
-//        var group_idOpt = Optional.of(botRequestDTO.getGroup_id());
-//        if (group_idOpt.isPresent()) {
-////            sendMsgGroup(botRequestDTO.getGroup_id(),"[CQ:at,qq="+botRequestDTO.getSender().getUser_id()+"]"+sendMessage.toString());
-////        }else {
-////            sendMsgPrivate(botRequestDTO.getUser_id(),sendMessage.toString());
-////        }
-        sendMsg(botRequestDTO, sendMessage.toString());
-    }
 
     /**
      * 发送消息  兼容群和私聊

@@ -1,6 +1,6 @@
 package cc.vimc.bot.impl;
 
-import cc.vimc.bot.dto.BotMemoryDTO;
+import cc.vimc.bot.model.BotMemory;
 import cc.vimc.bot.mapper.BotMemoryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,8 +37,9 @@ public class BotScheduleImpl {
     }
     @Scheduled(cron = "0 20 6 ? * *")
     public void goodMorning() {
-        var needNiceDayList = botMemoryMapper.selectNiceDayAll(null, 1);
-        for (BotMemoryDTO botMemoryDTO : needNiceDayList) {
+        var botMemory = new BotMemory(null,null,1,null);
+        var needNiceDayList =  botMemoryMapper.selectAllBotMemory(botMemory);
+        for (BotMemory botMemoryDTO : needNiceDayList) {
             var random = new Random(System.currentTimeMillis());
             var randomInt = random.nextInt(20) % 10;
             if (randomInt>3)
@@ -53,8 +54,9 @@ public class BotScheduleImpl {
 
     @Scheduled(cron = "0 30 22 ? * *")
     public void goodNight() {
-        var needNiceDayList = botMemoryMapper.selectNiceDayAll(null, 1);
-        for (BotMemoryDTO botMemoryDTO : needNiceDayList) {
+        var botMemory = new BotMemory(null,null,1,null);
+        var needNiceDayList =  botMemoryMapper.selectAllBotMemory(botMemory);
+        for (BotMemory botMemoryDTO : needNiceDayList) {
             if (botMemoryDTO.getType().equals(GROUP)) {
                 botApi.sendMsgGroup(botMemoryDTO.getId(), "[CQ:image,file=1EAE238AFC37A25A8449BA20001D861B.png,url=https://gchat.qpic.cn/gchatpic_new/815666528/3810510534-2240241385-1EAE238AFC37A25A8449BA20001D861B/0?vuin=1277841527&amp;term=2]");
             }
