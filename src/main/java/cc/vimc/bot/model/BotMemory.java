@@ -34,7 +34,7 @@ public class BotMemory {
     }
 
     public String getAllFieldAndData(Boolean isWhere, String... needFields) {
-        var result = "";
+        var result ="";
         var sb = new StringBuilder();
         var declaredFields = this.getClass().getDeclaredFields();
         for (Field field : declaredFields) {

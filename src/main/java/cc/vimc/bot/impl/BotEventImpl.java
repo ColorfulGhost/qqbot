@@ -1,27 +1,25 @@
 package cc.vimc.bot.impl;
 
+import cc.vimc.bot.dto.*;
 import cc.vimc.bot.model.BotMemory;
 import cc.vimc.bot.provider.ImageRec;
 import cc.vimc.bot.dao.MessageDAO;
-import cc.vimc.bot.dto.BaiduAGDTO;
-import cc.vimc.bot.dto.BotRequestDTO;
 
-import cc.vimc.bot.dto.Sender;
-import cc.vimc.bot.dto.TulingRequestDTO;
 import cc.vimc.bot.mapper.BotMemoryMapper;
+import cc.vimc.bot.provider.TranslateUtil;
 import cc.vimc.bot.provider.Tuling123;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import cn.hutool.extra.qrcode.QrConfig;
-import com.alibaba.fastjson.JSON;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 
 import javax.annotation.Resource;
@@ -32,6 +30,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -61,39 +60,9 @@ public class BotEventImpl {
     String mcGroupQQ;
     @Value("${tuling123.apikey}")
     String apiKey;
-
-    public void botEventHandle(String request) {
-        var botRequestDTO = new BotRequestDTO();
-        var tulingRequestDTO = new TulingRequestDTO();
-        try {
-            botRequestDTO = JSON.parseObject(request, BotRequestDTO.class);
-        } catch (Exception e) {
-            logger.error("模型转换出错！", e);
-            return;
-        }
-        //数据组装
-        dataAssembly(botRequestDTO, tulingRequestDTO);
-
-        //这里是处理所有消息的地方  如果存在条件则会在这里返回
-        if (anyEvent(botRequestDTO)) {
-            return;
-        }
-        if (!StringUtils.isEmpty(botRequestDTO.getMessage())) {
-            switch (botRequestDTO.getMessage_type()) {
-                //处理组消息
-                case GROUP:
-                    groupEvent(botRequestDTO, tulingRequestDTO);
-                    break;
-                //处理私有消息
-                case PRIVATE:
-                    privateEvent(botRequestDTO, tulingRequestDTO);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-    }
+    Cache<String, Integer> cache = CacheBuilder.newBuilder()
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .build();
 
     private void dataAssembly(BotRequestDTO botRequestDTO, TulingRequestDTO tulingRequestDTO) {
         var message = botRequestDTO.getMessage();
@@ -109,7 +78,7 @@ public class BotEventImpl {
         //资源信息处理
         //匹配CQ 图片 表情 语音
         String regex = "\\[CQ:(image|face|record),file=(.*?),url=(.*?)\\]";
-        var resourceList = ReUtil.findAll(regex, message, 0, new ArrayList<>());
+        var resourceList = ReUtil.get(regex, message, 0);
         //图片和资源混合消息进行提取出文字消息
         var extractMessage = new StringBuilder();
         for (String text : Pattern.compile(regex).split(message)) {
@@ -119,16 +88,28 @@ public class BotEventImpl {
         //给图灵的数据
         var perception = new TulingRequestDTO.Perception();
         var inputText = new TulingRequestDTO.Perception.InputText();
-        inputText.setText(extractMessage.toString());
+        var cacheKey = cacheTranslateJP(botRequestDTO);
+        var requestText = extractMessage.toString();
+        var regexAt = "\\[CQ:(at),qq=(.*?)\\](.*)";
+
+        var at = ReUtil.get(regexAt, requestText, 2);
+        if (botRequestDTO.getMessage_type().equals(GROUP) && at != null && at.equals(botRequestDTO.getSelf_id())) {
+            requestText = ReUtil.get(regexAt, requestText, 3);
+        }
+
+        if (cache.getIfPresent(cacheKey) == 1) {
+            //中文转日文
+            requestText = TranslateUtil.Translate(requestText, TranslateUtil.JA_ZH);
+        }
+        inputText.setText(requestText);
         perception.setInputText(inputText);
-        if (resourceList.stream().findFirst().isPresent()) {
-            var resource = resourceList.stream().findFirst().get();
+        if (resourceList != null) {
             //匹配第一个变量是否是image
-            if ("image".equals(ReUtil.findAll(regex, resource, 1, new ArrayList<>()).stream().findFirst().get())) {
+            if ("image".equals(ReUtil.findAll(regex, resourceList, 1, new ArrayList<>()).stream().findFirst().get())) {
                 tulingRequestDTO.setReqType(1);
                 //匹配第三个变量url
                 var inputURL = new TulingRequestDTO.Perception.InputURL();
-                inputURL.setUrl(ReUtil.findAll(regex, resource, 3, new ArrayList<>()).stream().findFirst().get());
+                inputURL.setUrl(ReUtil.findAll(regex, resourceList, 3, new ArrayList<>()).stream().findFirst().get());
                 perception.setInputImage(inputURL);
 
             }
@@ -143,7 +124,7 @@ public class BotEventImpl {
      * @author wlwang3
      * @date 2019/3/14
      */
-    private boolean anyEvent(BotRequestDTO botRequestDTO) {
+    public boolean anyEvent(BotRequestDTO botRequestDTO) {
         var message = botRequestDTO.getMessage();
         Optional<Sender> sender = Optional.of(botRequestDTO.getSender());
         var userId = sender.get().getUser_id();
@@ -166,33 +147,90 @@ public class BotEventImpl {
                 case NICE_DAY:
                     return niceDay(botRequestDTO, userId, nickName, messageType, groupId, msgSplitList);
                 case JP:
-                    return jp(botRequestDTO,msgSplitList.get(1));
+                    return jp(botRequestDTO, msgSplitList.get(1));
                 default:
-                    return false;
+                    return tuling(botRequestDTO);
             }
         }
     }
 
-    private boolean jp(BotRequestDTO botRequestDTO,String commandContent) {
-        String id ;
-        if (Optional.of(botRequestDTO.getGroup_id()).isPresent()){
-            id =  botRequestDTO.getGroup_id();
-        }else {
+    private boolean tuling(BotRequestDTO botRequestDTO) {
+        var tulingRequestDTO = new TulingRequestDTO();
+        dataAssembly(botRequestDTO, tulingRequestDTO);
+        var key = cacheTranslateJP(botRequestDTO);
+        var sendMessage = "";
+
+        var regexAt = "\\[CQ:(at),qq=(.*?)\\](.*)";
+        var atQQ = ReUtil.get(regexAt, botRequestDTO.getMessage(), 2);
+        sendMessage = Tuling123.tulingRequest(tulingRequestDTO);
+        if (cache.getIfPresent(key) == 1) {
+            //中文转日文
+            sendMessage = TranslateUtil.Translate(sendMessage, TranslateUtil.ZH_JA);
+        }
+
+        if (botRequestDTO.getMessage_type().equals(GROUP) && atQQ != null && atQQ.equals(botRequestDTO.getSelf_id())) {
+            botApi.sendMsgGroup(botRequestDTO.getGroup_id(), sendMessage);
+            return true;
+        }
+        if (botRequestDTO.getMessage_type().equals(PRIVATE)) {
+            botApi.sendMsgPrivate(botRequestDTO.getUser_id(), sendMessage);
+            return true;
+        }
+        return false;
+    }
+
+
+    private String cacheTranslateJP(BotRequestDTO botRequestDTO) {
+        var id = "";
+        var type = "";
+        if (botRequestDTO.getMessage_type().equals(GROUP)) {
+            id = botRequestDTO.getGroup_id();
+            type = GROUP;
+        } else {
+            id = botRequestDTO.getUser_id();
+            type = PRIVATE;
+        }
+        var key = id + type;
+        if (cache.getIfPresent(key) == null) {
+            var memory = botMemoryMapper.selectBotMemory(new BotMemory(id, type, null, null));
+            if (memory != null) {
+                cache.put(key, memory.getTranslateJp());
+            }
+        }
+        return key;
+    }
+
+    private boolean jp(BotRequestDTO botRequestDTO, String commandContent) {
+        String id = "";
+        if (botRequestDTO.getMessage_type().equals(GROUP)) {
+            id = botRequestDTO.getGroup_id();
+        }
+        if (botRequestDTO.getMessage_type().equals(PRIVATE)) {
             id = botRequestDTO.getUser_id();
         }
-        var botMemory = new BotMemory(id,botRequestDTO.getMessage_type(),null,Integer.parseInt(commandContent));
-        var botMemoryResult =botMemoryMapper.selectBotMemory(botMemory);
-        if (Optional.of(botMemoryResult).isPresent()){
+        int memoryJp = Integer.parseInt(commandContent);
+        var botMemory = new BotMemory(id, botRequestDTO.getMessage_type(), null, 1);
+        var botMemoryResult = botMemoryMapper.selectBotMemory(botMemory);
+        var sendMessage = new StringBuilder().append("日语模式状态：");
+        if (memoryJp == 1) {
+            sendMessage.append("开启");
+        }
+        if (memoryJp == 0) {
+            sendMessage.append("关闭");
+
+        }
+        if (Optional.of(botMemoryResult).isPresent()) {
             var result = botMemoryMapper.updateBotMemory(botMemory);
             if (result) {
-                botApi.sendMsg(botRequestDTO,"更新成功");
+                botApi.sendMsg(botRequestDTO, sendMessage.toString());
             }
-        }else {
-           var result = botMemoryMapper.insertBotMemory(botMemory);
+        } else {
+            var result = botMemoryMapper.insertBotMemory(botMemory);
             if (result) {
-                botApi.sendMsg(botRequestDTO,"插入成功");
+                botApi.sendMsg(botRequestDTO, sendMessage.toString());
             }
         }
+        cache.put(botMemory.getId() + botMemory.getType(), Integer.parseInt(commandContent));
         return true;
     }
 
@@ -227,7 +265,7 @@ public class BotEventImpl {
             URL url = new URL("https://q1.qlogo.cn/g?b=qq&nk=" + botRequestDTO.getUser_id() + "&s=100");
             userImage = ImageIO.read(url);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
         config.setImg(userImage);
         var qrFile = QrCodeUtil.generate(commandContent, config, FileUtil.file("qrcode.jpg"));
@@ -235,7 +273,7 @@ public class BotEventImpl {
         try {
             bytes = Files.readAllBytes(qrFile.toPath());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             return false;
         }
         var base64 = Base64.getEncoder().encodeToString(bytes);
@@ -312,7 +350,7 @@ public class BotEventImpl {
      * @author wlwang3
      * @date 2019/3/14
      */
-    private void privateEvent(BotRequestDTO botRequestDTO, TulingRequestDTO tulingRequestDTO) {
+    public void privateEvent(BotRequestDTO botRequestDTO) {
 
         var message = botRequestDTO.getMessage();
         var userId = botRequestDTO.getSender().getUser_id();
@@ -325,7 +363,6 @@ public class BotEventImpl {
             case LIGHT:
                 break;
             default:
-                botApi.sendMsgPrivate(botRequestDTO.getUser_id(), Tuling123.tulingRequest(tulingRequestDTO));
                 break;
         }
     }
@@ -337,24 +374,17 @@ public class BotEventImpl {
      * @author wlwang3
      * @date 2019/3/14
      */
-    private void groupEvent(BotRequestDTO botRequestDTO, TulingRequestDTO tulingRequestDTO) {
+    public void groupEvent(BotRequestDTO botRequestDTO) {
         var message = botRequestDTO.getMessage();
-        var nickName = botRequestDTO.getSender().getNickname();
         //如果复读
         if (messageDAO.repeatMessageCount(botRequestDTO.getGroup_id(), message)) {
             botApi.sendMsg(botRequestDTO, message);
-        }
-        var regexAt = "\\[CQ:(at),qq=(.*?)\\]";
-        var atQQ = ReUtil.findAll(regexAt, message, 2, new ArrayList<>());
-        if (atQQ.contains(botRequestDTO.getSelf_id())) {
-            botApi.sendMsgGroup(botRequestDTO.getGroup_id(), Tuling123.tulingRequest(tulingRequestDTO));
         }
         //处理MCQQ群里的消息
         if (mcGroupQQ.equals(botRequestDTO.getGroup_id())) {
             //命令
             switch (message) {
                 case LIST:
-                    botApi.sendMsg(botRequestDTO, minecraft.postPlayerList(nickName));
                     break;
                 case TPS:
                     botApi.sendMsg(botRequestDTO, minecraft.sendCommand(TPS.substring(1)));

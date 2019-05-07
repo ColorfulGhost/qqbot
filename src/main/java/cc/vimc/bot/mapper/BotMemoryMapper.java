@@ -3,8 +3,6 @@ package cc.vimc.bot.mapper;
 import cc.vimc.bot.model.BotMemory;
 import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.jdbc.SQL;
-import org.springframework.util.NumberUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -64,7 +62,7 @@ public interface BotMemoryMapper {
                 SELECT(sqlField);
                 FROM(tableName);
                 WHERE(botMemory.getAllFieldAndData(true,
-                        new String[]{NICE_DAY, TRANSLATEJP}));
+                        NICE_DAY, TRANSLATEJP));
             }}.toString();
         }
 
@@ -72,22 +70,22 @@ public interface BotMemoryMapper {
             return new SQL() {{
                 UPDATE(tableName);
                 SET(botMemory.getAllFieldAndData(false,
-                        new String[]{NICE_DAY, TRANSLATEJP}));
+                        NICE_DAY, TRANSLATEJP));
                 WHERE(botMemory.getAllFieldAndData(true,
-                        new String[]{ID, TYPE}));
+                        ID, TYPE));
             }}.toString();
         }
 
         public String insertBotMemory(BotMemory botMemory) {
             return new SQL() {{
                 INSERT_INTO(tableName);
-                VALUES(sqlField[0],new StringBuilder().append("'").append(botMemory.getId()).append("'").toString());
-                VALUES(sqlField[1],new StringBuilder().append("'").append(botMemory.getType()).append("'").toString());
+                VALUES(sqlField[0], new StringBuilder().append("'").append(botMemory.getId()).append("'").toString());
+                VALUES(sqlField[1], new StringBuilder().append("'").append(botMemory.getType()).append("'").toString());
                 if (botMemory.getNiceDay() != null) {
-                    VALUES(sqlField[2],botMemory.getNiceDay().toString());
+                    VALUES(sqlField[2], botMemory.getNiceDay().toString());
                 }
-                if (botMemory.getTranslateJp()!=null){
-                    VALUES(sqlField[3],botMemory.getTranslateJp().toString());
+                if (botMemory.getTranslateJp() != null) {
+                    VALUES(sqlField[3], botMemory.getTranslateJp().toString());
                 }
             }}.toString();
         }
@@ -96,7 +94,7 @@ public interface BotMemoryMapper {
             return new SQL() {{
                 SELECT(sqlField);
                 FROM(tableName);
-                WHERE(botMemory.getAllFieldAndData(true, new String[]{ID, TYPE}));
+                WHERE(botMemory.getAllFieldAndData(true, ID, TYPE));
             }}.toString();
         }
     }

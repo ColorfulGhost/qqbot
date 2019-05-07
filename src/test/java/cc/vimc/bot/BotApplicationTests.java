@@ -58,7 +58,8 @@ public class BotApplicationTests {
 //        imageRec("http://i.acg.gy/VOYIW2u.jpg");
 //        log.error(baiduAi.getToken());
 //        botSchedule.goodMorning();
-        TranslateUtil.Translate("天气不错");
+//       zh-ja
+        TranslateUtil.Translate("あなたは私の弟弟です",TranslateUtil.JA_ZH);
 
     }
 

@@ -4,6 +4,7 @@ package cc.vimc.bot.impl;
 import cc.vimc.bot.dto.BotRequestDTO;
 import cc.vimc.bot.dto.GroupMemberDTO;
 import cc.vimc.bot.util.HttpUtils;
+import cn.hutool.cache.CacheUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
