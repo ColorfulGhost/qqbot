@@ -19,7 +19,7 @@ public class BotApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(BotApplication.class, args);
-        Client.webSocketClient();
+//        Client.webSocketClient();
     }
 
 }

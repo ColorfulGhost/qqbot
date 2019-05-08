@@ -162,17 +162,23 @@ public class BotEventImpl {
 
         var regexAt = "\\[CQ:(at),qq=(.*?)\\](.*)";
         var atQQ = ReUtil.get(regexAt, botRequestDTO.getMessage(), 2);
-        sendMessage = Tuling123.tulingRequest(tulingRequestDTO);
-        if (cache.getIfPresent(key) == 1) {
-            //中文转日文
-            sendMessage = TranslateUtil.Translate(sendMessage, TranslateUtil.ZH_JA);
-        }
+
 
         if (botRequestDTO.getMessage_type().equals(GROUP) && atQQ != null && atQQ.equals(botRequestDTO.getSelf_id())) {
+            sendMessage = Tuling123.tulingRequest(tulingRequestDTO);
+            if (cache.getIfPresent(key) == 1) {
+                //中文转日文
+                sendMessage = TranslateUtil.Translate(sendMessage, TranslateUtil.ZH_JA);
+            }
             botApi.sendMsgGroup(botRequestDTO.getGroup_id(), sendMessage);
             return true;
         }
         if (botRequestDTO.getMessage_type().equals(PRIVATE)) {
+            sendMessage = Tuling123.tulingRequest(tulingRequestDTO);
+            if (cache.getIfPresent(key) == 1) {
+                //中文转日文
+                sendMessage = TranslateUtil.Translate(sendMessage, TranslateUtil.ZH_JA);
+            }
             botApi.sendMsgPrivate(botRequestDTO.getUser_id(), sendMessage);
             return true;
         }
