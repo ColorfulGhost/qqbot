@@ -58,10 +58,12 @@ public class BotEventImpl {
 
     @Value("${MC_GROUP_QQ}")
     String mcGroupQQ;
-    @Value("${tuling123.apikey}")
-    String apiKey;
-    Cache<String, Integer> cache = CacheBuilder.newBuilder()
+    private Cache<String, Integer> cacheJP = CacheBuilder.newBuilder()
             .expireAfterAccess(5, TimeUnit.MINUTES)
+            .build();
+
+    private Cache<String, Integer> cacheTulingOut = CacheBuilder.newBuilder()
+            .expireAfterWrite(12, TimeUnit.HOURS)
             .build();
 
     private void dataAssembly(BotRequestDTO botRequestDTO, TulingRequestDTO tulingRequestDTO) {
@@ -73,7 +75,8 @@ public class BotEventImpl {
         userInfo.setUserId(botRequestDTO.getUser_id());
         Optional<Sender> sender = Optional.of(botRequestDTO.getSender());
         userInfo.setUserIdName(sender.get().getNickname());
-        userInfo.setApiKey(apiKey);
+        var apiKeys = List.of("7de376756c95455fa55fa1d1f41eb745", "ee7dedc086414baaa4bab04d9deb5d11");
+        userInfo.setApiKey(apiKeys.get((int) (Math.random() * apiKeys.size())));
         tulingRequestDTO.setUserInfo(userInfo);
         //资源信息处理
         //匹配CQ 图片 表情 语音
@@ -97,7 +100,7 @@ public class BotEventImpl {
             requestText = ReUtil.get(regexAt, requestText, 3);
         }
 
-        if (cache.getIfPresent(cacheKey) == 1) {
+        if (cacheJP.getIfPresent(cacheKey) == 1) {
             //中文转日文
             requestText = TranslateUtil.Translate(requestText, TranslateUtil.JA_ZH);
         }
@@ -166,7 +169,7 @@ public class BotEventImpl {
 
         if (botRequestDTO.getMessage_type().equals(GROUP) && atQQ != null && atQQ.equals(botRequestDTO.getSelf_id())) {
             sendMessage = Tuling123.tulingRequest(tulingRequestDTO);
-            if (cache.getIfPresent(key) == 1) {
+            if (cacheJP.getIfPresent(key) == 1) {
                 //中文转日文
                 sendMessage = TranslateUtil.Translate(sendMessage, TranslateUtil.ZH_JA);
             }
@@ -175,7 +178,7 @@ public class BotEventImpl {
         }
         if (botRequestDTO.getMessage_type().equals(PRIVATE)) {
             sendMessage = Tuling123.tulingRequest(tulingRequestDTO);
-            if (cache.getIfPresent(key) == 1) {
+            if (cacheJP.getIfPresent(key) == 1) {
                 //中文转日文
                 sendMessage = TranslateUtil.Translate(sendMessage, TranslateUtil.ZH_JA);
             }
@@ -197,10 +200,10 @@ public class BotEventImpl {
             type = PRIVATE;
         }
         var key = id + type;
-        if (cache.getIfPresent(key) == null) {
+        if (cacheJP.getIfPresent(key) == null) {
             var memory = botMemoryMapper.selectBotMemory(new BotMemory(id, type, null, null));
             if (memory != null) {
-                cache.put(key, memory.getTranslateJp());
+                cacheJP.put(key, memory.getTranslateJp());
             }
         }
         return key;
@@ -236,7 +239,7 @@ public class BotEventImpl {
                 botApi.sendMsg(botRequestDTO, sendMessage.toString());
             }
         }
-        cache.put(botMemory.getId() + botMemory.getType(), Integer.parseInt(commandContent));
+        cacheJP.put(botMemory.getId() + botMemory.getType(), Integer.parseInt(commandContent));
         return true;
     }
 

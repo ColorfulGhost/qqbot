@@ -8,20 +8,17 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 public class Tuling123 {
 
     private static String TULINGURL = "http://openapi.tuling123.com/openapi/api/v2";
 
+
     public static String tulingRequest(TulingRequestDTO tulingRequestDTO) {
-//        var message = botRequestDTO.getMessage();
-//        //匹配CQ 图片 表情 语音
-//        String regex = "\\[CQ:(image|face|record|at),file=(.*?),url=(.*?)\\]";
-//        //图片和资源混合消息进行提取出文字消息
-//        var extractMessage = new StringBuilder();
-//        for (String text : Pattern.compile(regex).split(message)) {
-//            extractMessage.append(text);
-//        }
         //如果是图片 从图灵机器人到百度AI识别
         if (tulingRequestDTO.getReqType() == 1) {
             var resultMsg = new StringBuilder();
