@@ -34,34 +34,23 @@ public class BotMemory {
     }
 
     public String getAllFieldAndData(Boolean isWhere, String... needFields) {
-        var result ="";
         var sb = new StringBuilder();
-        var declaredFields = this.getClass().getDeclaredFields();
-        for (Field field : declaredFields) {
-            if (!Arrays.asList(needFields).contains(field.getName())) {
-                continue;
-            }
+        //对所有字段进行循环
+        for (Field field : this.getClass().getDeclaredFields()) {
             try {
+                //获取这个字段的值
                 var fieldData = field.get(this);
-                if (fieldData == null) {
+                //只保留我需要的字段数据   如果没有值放弃这个数据的查询
+                if (!Arrays.asList(needFields).contains(field.getName()) || fieldData == null) {
                     continue;
                 }
-
-                sb.append(StringUtils.underline(new StringBuffer(field.getName()))).append("='").append(fieldData).append("'");
-                if (isWhere) {
-                    sb.append(" AND ");
-                } else {
-                    sb.append(",");
-                }
-
-
+                //添加这个字段的数据到StringBuilder
+                sb.append(StringUtils.underline(new StringBuffer(field.getName()))).append("='").append(fieldData).append("'").append(isWhere?" AND ":",");
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
-        result = sb.toString();
-        result = result.substring(0, isWhere ? result.length() - 5 : result.length() - 1);
-        return result;
+        return sb.substring(0, isWhere ? sb.length() - 5 : sb.length() - 1);
 
     }
 

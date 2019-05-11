@@ -218,23 +218,25 @@ public class BotEventImpl {
             id = botRequestDTO.getUser_id();
         }
         int memoryJp = Integer.parseInt(commandContent);
-        var botMemory = new BotMemory(id, botRequestDTO.getMessage_type(), null, 1);
-        var botMemoryResult = botMemoryMapper.selectBotMemory(botMemory);
+        var botMemory = new BotMemory(id, botRequestDTO.getMessage_type(), null, memoryJp);
+        var botMemoryResult = botMemoryMapper.selectBotMemory(new BotMemory(id, botRequestDTO.getMessage_type(), null, null));
         var sendMessage = new StringBuilder().append("日语模式状态：");
         if (memoryJp == 1) {
             sendMessage.append("开启");
         }
         if (memoryJp == 0) {
             sendMessage.append("关闭");
-
+        }else {
+            return true;
         }
+        var saveMemory = new BotMemory(id, botRequestDTO.getMessage_type(), null, memoryJp);
         if (Optional.of(botMemoryResult).isPresent()) {
-            var result = botMemoryMapper.updateBotMemory(botMemory);
+            var result = botMemoryMapper.updateBotMemory(saveMemory);
             if (result) {
                 botApi.sendMsg(botRequestDTO, sendMessage.toString());
             }
         } else {
-            var result = botMemoryMapper.insertBotMemory(botMemory);
+            var result = botMemoryMapper.insertBotMemory(saveMemory);
             if (result) {
                 botApi.sendMsg(botRequestDTO, sendMessage.toString());
             }
