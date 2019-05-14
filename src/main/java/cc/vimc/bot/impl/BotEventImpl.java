@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StopWatch;
 
 
 import javax.annotation.Resource;
@@ -67,8 +68,10 @@ public class BotEventImpl {
             .build();
 
     private void dataAssembly(BotRequestDTO botRequestDTO, TulingRequestDTO tulingRequestDTO) {
+        if (botRequestDTO==null){
+            return;
+        }
         var message = botRequestDTO.getMessage();
-
         //给图灵用户信息赋值
         var userInfo = new TulingRequestDTO.UserInfo();
         userInfo.setGroupId(botRequestDTO.getGroup_id());
@@ -94,7 +97,6 @@ public class BotEventImpl {
         var cacheKey = cacheTranslateJP(botRequestDTO);
         var requestText = extractMessage.toString();
         var regexAt = "\\[CQ:(at),qq=(.*?)\\](.*)";
-
         var at = ReUtil.get(regexAt, requestText, 2);
         if (botRequestDTO.getMessage_type().equals(GROUP) && at != null && at.equals(botRequestDTO.getSelf_id())) {
             requestText = ReUtil.get(regexAt, requestText, 3);
@@ -226,7 +228,7 @@ public class BotEventImpl {
         }
         if (memoryJp == 0) {
             sendMessage.append("关闭");
-        }else {
+        } else {
             return true;
         }
         var saveMemory = new BotMemory(id, botRequestDTO.getMessage_type(), null, memoryJp);
@@ -269,6 +271,9 @@ public class BotEventImpl {
     }
 
     private boolean qr(BotRequestDTO botRequestDTO, String commandContent) {
+        var stopWatch = new StopWatch();
+        stopWatch.start();
+
         QrConfig config = new QrConfig(400, 400);
         config.setMargin(1);
         BufferedImage userImage = null;
@@ -276,19 +281,21 @@ public class BotEventImpl {
             URL url = new URL("https://q1.qlogo.cn/g?b=qq&nk=" + botRequestDTO.getUser_id() + "&s=100");
             userImage = ImageIO.read(url);
         } catch (Exception e) {
+
             logger.error(e.getMessage(), e);
         }
         config.setImg(userImage);
-        var qrFile = QrCodeUtil.generate(commandContent, config, FileUtil.file("qrcode.jpg"));
-        byte[] bytes;
+        var qrFile = QrCodeUtil.generate(commandContent, config);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
-            bytes = Files.readAllBytes(qrFile.toPath());
+            ImageIO.write(qrFile, "png", out);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             return false;
         }
-        var base64 = Base64.getEncoder().encodeToString(bytes);
-        botApi.sendMsg(botRequestDTO, "[CQ:image,file=base64://" + base64 + "]");
+        var base64 = Base64.getEncoder().encodeToString(out.toByteArray());
+        stopWatch.stop();
+        botApi.sendMsg(botRequestDTO, "[CQ:image,file=base64://" + base64 + "]" + "\n生成二维码耗时：" + stopWatch.getLastTaskTimeMillis() / 1000.0 + "秒");
         return true;
     }
 

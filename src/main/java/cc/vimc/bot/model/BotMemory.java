@@ -45,7 +45,7 @@ public class BotMemory {
                     continue;
                 }
                 //添加这个字段的数据到StringBuilder
-                sb.append(StringUtils.underline(new StringBuffer(field.getName()))).append("='").append(fieldData).append("'").append(isWhere?" AND ":",");
+                sb.append(StringUtils.underline(new StringBuffer(field.getName()))).append("='").append(fieldData).append("'").append(isWhere ? " AND " : ",");
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
