@@ -1,10 +1,8 @@
 package cc.vimc.bot;
 
-import cc.vimc.bot.dao.UserDAO;
-import cc.vimc.bot.provider.ImageRec;
 import cc.vimc.bot.provider.TranslateUtil;
-import cc.vimc.bot.impl.BotApiImpl;
-import cc.vimc.bot.impl.BotScheduleImpl;
+import cc.vimc.bot.service.impl.BotApiImpl;
+import cc.vimc.bot.service.impl.BotScheduleImpl;
 import cc.vimc.bot.mapper.BotMemoryMapper;
 import cn.hutool.core.util.ReUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +22,8 @@ import java.util.regex.Pattern;
 @SpringBootTest
 public class BotApplicationTests {
 
-    @Resource
-    UserDAO userDAO;
+//    @Resource
+//    UserDAO userDAO;
 
     @Autowired
     BotApiImpl botApi;

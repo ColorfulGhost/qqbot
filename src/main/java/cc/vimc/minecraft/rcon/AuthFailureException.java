@@ -1,4 +1,4 @@
-package cc.vimc.bot.rcon;
+package cc.vimc.minecraft.rcon;
 
 /**
  * Exception thrown by {@link RconClientException} when the specified password is incorrect.

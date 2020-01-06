@@ -1,4 +1,4 @@
-package cc.vimc.bot.controller;
+package cc.vimc.minecraft.controller;
 
 import cc.vimc.bot.model.ReturnModel;
 import cc.vimc.bot.service.impl.MinecraftImpl;

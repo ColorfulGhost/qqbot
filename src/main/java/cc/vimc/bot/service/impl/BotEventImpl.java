@@ -1,14 +1,13 @@
-package cc.vimc.bot.impl;
+package cc.vimc.bot.service.impl;
 
 import cc.vimc.bot.dto.*;
 import cc.vimc.bot.model.BotMemory;
+import cc.vimc.bot.model.Sender;
 import cc.vimc.bot.provider.ImageRec;
-import cc.vimc.bot.dao.MessageDAO;
 
 import cc.vimc.bot.mapper.BotMemoryMapper;
 import cc.vimc.bot.provider.TranslateUtil;
 import cc.vimc.bot.provider.Tuling123;
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import cn.hutool.extra.qrcode.QrConfig;
@@ -23,12 +22,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
 
 
-import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -39,18 +36,20 @@ import static cc.vimc.bot.enums.Commands.*;
 import static cc.vimc.bot.enums.Fields.GROUP;
 import static cc.vimc.bot.enums.Fields.PRIVATE;
 
-
+/**
+ * @Description 处理事件业务逻辑
+ * @author Ghost
+ * @return
+ * @date 2019/12/3
+ */
 @Service
 public class BotEventImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(BotEventImpl.class);
     @Autowired
     BotApiImpl botApi;
-
     @Autowired
     MinecraftImpl minecraft;
-    @Resource
-    MessageDAO messageDAO;
     @Autowired
     BotMemoryMapper botMemoryMapper;
 
@@ -395,9 +394,9 @@ public class BotEventImpl {
     public void groupEvent(BotRequestDTO botRequestDTO) {
         var message = botRequestDTO.getMessage();
         //如果复读
-        if (messageDAO.repeatMessageCount(botRequestDTO.getGroup_id(), message)) {
-            botApi.sendMsg(botRequestDTO, message);
-        }
+//        if (messageDAO.repeatMessageCount(botRequestDTO.getGroup_id(), message)) {
+//            botApi.sendMsg(botRequestDTO, message);
+//        }
         //处理MCQQ群里的消息
         if (mcGroupQQ.equals(botRequestDTO.getGroup_id())) {
             //命令

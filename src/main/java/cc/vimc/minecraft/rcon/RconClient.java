@@ -1,4 +1,4 @@
-package cc.vimc.bot.rcon;
+package cc.vimc.minecraft.rcon;
 
 import java.io.Closeable;
 import java.io.IOException;

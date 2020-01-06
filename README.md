@@ -27,3 +27,30 @@
 * Minecraft RCON Console 通讯Byte处理待优化
 * Minecraft 服务器 Web 官网待开发
 * MySQL多数据源配置
+
+## 部署步骤
+### 部署Wine-CoolQ
+https://hub.docker.com/r/coolq/wine-coolq
+```shell script
+docker run -ti --rm --name cqhttp-test --net=host \
+-p 9000:9000 \
+-p 5700:5700 \
+-v /home/coolq:/home/user/coolq \
+-e COOLQ_ACCOUNT=1277841527 \
+-e CQHTTP_POST_URL=http://localhost:2334/botEvent \
+-e CQHTTP_SERVE_DATA_FILES=yes \
+-e VNC_PASSWD=sdfg84sf \
+-e COOLQ_URL=http://dlsec.cqp.me/cqa-tuling \
+richardchien/cqhttp:latest
+
+```
+### 部署Redis
+推荐KeyDB（多线程Redis）
+https://hub.docker.com/r/eqalpha/keydb
+```shell script
+docker run -it --rm --name coolq-keydb \
+-p 6379:6379 \
+-v /home/keyDB:/data \
+-d eqalpha/keydb keydb-server --appendonly yes --protected-mode no
+```
+

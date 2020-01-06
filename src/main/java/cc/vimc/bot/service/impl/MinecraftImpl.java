@@ -1,51 +1,37 @@
-package cc.vimc.bot.impl;
+package cc.vimc.bot.service.impl;
 
 
-import cc.vimc.bot.dao.UserDAO;
 import cc.vimc.bot.mapper.MinecraftMapper;
-import cc.vimc.bot.rcon.RconClient;
-import cc.vimc.bot.util.Sha256;
+import cc.vimc.minecraft.rcon.RconClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import java.util.*;
 
-import static cc.vimc.bot.enums.Apis.SEND_GROUP_MSG;
-import static cc.vimc.bot.enums.Fields.GROUP_ID;
-import static cc.vimc.bot.enums.Fields.MESSAGE;
-
+/**
+ * @Description 处理Minecraft消息
+ * @author Ghost
+ * @return
+ * @date 2019/12/3
+ */
 @Service
 public class MinecraftImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(MinecraftImpl.class);
     @Value("${RCON.PASSWORD}")
     String rconPassword;
-
     @Value("${MCSERVER.HOST}")
     String mcServerHost;
-
     @Value("${RCON.PORT}")
     Integer mcRCONPort;
-
-
     @Value("${QQBOT_URL}")
     String qqbotUrl;
-
-
-
     @Autowired
     BotApiImpl botApi;
-
-    @Resource
-    UserDAO userDAO;
-
     @Autowired
     private MinecraftMapper minecraftMapper;
 
@@ -53,23 +39,23 @@ public class MinecraftImpl {
         return minecraftMapper.onlinePlayerList();
     }
 
-    public String userVerifyByToken(String userName, String password) {
-        var userDTO = minecraftMapper.getUserDTOByAll(userName);
-        //1是加密方案 2是盐 3是sha256  盐
-        List<String> crypts = Arrays.asList(userDTO.getPassword().split("\\$"));
-        var possible = crypts.get(1);
-        var salt = crypts.get(2);
-        var encode = crypts.get(3);
-        String encryptedPassword = "$" + possible + "$" + salt + "$" + Sha256.sha256(Sha256.sha256(password) + salt);
-        if (userDTO.getPassword().equals(encryptedPassword)) {
-            String token = userDAO.getUserToken(userName);
-            if (StringUtils.isEmpty(token)){
-                token = userDAO.setUserToken(userName);
-            }
-            return token;
-        }
-        return null;
-    }
+//    public String userVerifyByToken(String userName, String password) {
+//        var userDTO = minecraftMapper.getUserDTOByAll(userName);
+//        //1是加密方案 2是盐 3是sha256  盐
+//        List<String> crypts = Arrays.asList(userDTO.getPassword().split("\\$"));
+//        var possible = crypts.get(1);
+//        var salt = crypts.get(2);
+//        var encode = crypts.get(3);
+//        String encryptedPassword = "$" + possible + "$" + salt + "$" + Sha256.sha256(Sha256.sha256(password) + salt);
+//        if (userDTO.getPassword().equals(encryptedPassword)) {
+//            String token = userDAO.getUserToken(userName);
+//            if (StringUtils.isEmpty(token)){
+//                token = userDAO.setUserToken(userName);
+//            }
+//            return token;
+//        }
+//        return null;
+//    }
 
     public String postPlayerList(String sendNickName) {
         var players = onlinePlayerList();

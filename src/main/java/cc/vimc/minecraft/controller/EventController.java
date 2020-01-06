@@ -1,13 +1,11 @@
-package cc.vimc.bot.controller;
+package cc.vimc.minecraft.controller;
 
 
 import cc.vimc.bot.dto.BotRequestDTO;
-import cc.vimc.bot.dto.TulingRequestDTO;
-import cc.vimc.bot.impl.BotEventImpl;
+import cc.vimc..BotEventImpl;
 
-import cc.vimc.bot.util.Sha256;
+import cc.vimc.bot.utils.Sha256;
 import com.alibaba.fastjson.JSON;
-import com.xxl.conf.core.annotation.XxlConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +29,6 @@ public class EventController {
     @Value("${token}")
     String token;
 
-    @XxlConf("")
     @Value("${authorization}")
     String authorization;
 
@@ -39,7 +36,7 @@ public class EventController {
     @ResponseBody
     public void pushMsg(@RequestHeader(name = "X-Self-ID", required = true) String botQQ, @RequestBody String request) {
         //验证是否是我的BOT
-        if (!Sha256.sha256(token + botQQ).equals(authorization)) {
+        if (new Sha256(token + botQQ).get().equals(authorization)) {
             return;
         }
         //处理所有事件

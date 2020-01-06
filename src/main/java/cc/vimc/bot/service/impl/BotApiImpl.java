@@ -1,10 +1,9 @@
-package cc.vimc.bot.impl;
+package cc.vimc.bot.service.impl;
 
 
 import cc.vimc.bot.dto.BotRequestDTO;
 import cc.vimc.bot.dto.GroupMemberDTO;
-import cc.vimc.bot.util.HttpUtils;
-import cn.hutool.cache.CacheUtil;
+import cc.vimc.bot.utils.HttpUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +14,12 @@ import java.util.*;
 import static cc.vimc.bot.enums.Apis.*;
 import static cc.vimc.bot.enums.Fields.*;
 
-
+/**
+ * @Description 处理消息的业务逻辑
+ * @author Ghost
+ * @return
+ * @date 2019/12/3
+ */
 @Service
 public class BotApiImpl {
     @Value("${QQBOT_URL}")
@@ -81,7 +85,7 @@ public class BotApiImpl {
         for (String groupId : groupIds) {
             request.put(GROUP_ID, groupId);
             var data = JSON.parseObject(HttpUtils.post(qqbotUrl , GET_GROUP_MEMBER_LIST, request)).getString("data");
-            List<GroupMemberDTO> memberDTOList = JSON.parseArray(data, GroupMemberDTO.class);
+            var memberDTOList = JSON.parseArray(data, GroupMemberDTO.class);
             groupMemberDTOListMap.put(groupId, memberDTOList);
         }
         return groupMemberDTOListMap;
@@ -106,6 +110,7 @@ public class BotApiImpl {
      * @param userId
      */
 //    @Async
+    @Deprecated
     public void sendLike(String userId) {
         Map<String, Object> request = new HashMap<>();
         request.put(USER_ID, userId);

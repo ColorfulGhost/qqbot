@@ -1,4 +1,4 @@
-package cc.vimc.bot.util;
+package cc.vimc.bot.utils;
 
 import lombok.extern.slf4j.Slf4j;
 

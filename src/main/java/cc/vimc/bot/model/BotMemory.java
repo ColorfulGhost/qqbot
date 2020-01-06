@@ -1,6 +1,6 @@
 package cc.vimc.bot.model;
 
-import cc.vimc.bot.util.StringUtils;
+import cc.vimc.bot.utils.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

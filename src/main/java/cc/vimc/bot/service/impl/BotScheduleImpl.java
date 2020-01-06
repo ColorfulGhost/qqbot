@@ -1,4 +1,4 @@
-package cc.vimc.bot.impl;
+package cc.vimc.bot.service.impl;
 
 import cc.vimc.bot.model.BotMemory;
 import cc.vimc.bot.mapper.BotMemoryMapper;
@@ -12,7 +12,12 @@ import java.util.*;
 
 import static cc.vimc.bot.enums.Fields.GROUP;
 import static cc.vimc.bot.enums.Fields.PRIVATE;
-
+/**
+ * @Description 任务调度发送消息
+ * @author Ghost
+ * @return
+ * @date 2019/12/3
+ */
 @Service
 public class BotScheduleImpl {
     @Value("${MC_GROUP_QQ}")

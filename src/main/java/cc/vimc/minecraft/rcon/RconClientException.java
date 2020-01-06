@@ -1,4 +1,4 @@
-package cc.vimc.bot.rcon;
+package cc.vimc.minecraft.rcon;
 
 /**
  * Generic exception thrown by {@link RconClientException} when any exception occurs.

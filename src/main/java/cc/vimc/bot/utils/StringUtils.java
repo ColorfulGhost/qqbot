@@ -1,4 +1,4 @@
-package cc.vimc.bot.util;
+package cc.vimc.bot.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

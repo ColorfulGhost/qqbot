@@ -1,7 +1,9 @@
 package cc.vimc.bot.dto;
 
-import java.util.List;
+import lombok.Data;
 
+import java.util.List;
+@Data
 public class TranslateDTO {
 
     /**
@@ -16,52 +18,13 @@ public class TranslateDTO {
     private String lang;
     private List<String> text;
 
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public Detected getDetected() {
-        return detected;
-    }
-
-    public void setDetected(Detected detected) {
-        this.detected = detected;
-    }
-
-    public String getLang() {
-        return lang;
-    }
-
-    public void setLang(String lang) {
-        this.lang = lang;
-    }
-
-    public List<String> getText() {
-        return text;
-    }
-
-    public void setText(List<String> text) {
-        this.text = text;
-    }
-
+    @Data
     public static class Detected {
-        /**
-         * lang : zh
-         */
+
 
         private String lang;
 
-        public String getLang() {
-            return lang;
-        }
 
-        public void setLang(String lang) {
-            this.lang = lang;
-        }
     }
 }
 
