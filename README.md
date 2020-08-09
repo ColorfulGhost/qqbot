@@ -1,5 +1,8 @@
 # QQBot 
-> 基于CoolQ HTTP API(https://cqhttp.cc/)插件实现的Java版本机器人。
+ 因为CoolQ停止运营 本项目暂停维护
+
+> 基于CoolQ HTTP API(https://cqhttp.cc/) 插件实现的Java版本机器人。
+
 ## 环境搭建和框架
 1. Redis
 2. MySQL
